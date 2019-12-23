@@ -33,15 +33,11 @@ class ScrapedSection:
         else:
             self.start = self.end = None
 
-        # "M", "Tue", "W", "Thu", "F"
-
-        self.mon = 'M' in days
-        self.tue = 'Tue' in days
-        self.wed = 'W' in days
-        self.thu = 'Thu' in days
-        self.fri = 'F' in days
-        self.sat = 'Sat' in days
-        self.sun = 'Sun' in days
+        self.days = []
+        day_names = ["M", "Tue", "W", "Thu", "F", "Sat", "Sun"]
+        for i in range(len(day_names)):
+            if day_names[i] in days:
+                self.days.append(i)
 
 
 class ScrapedCourse:
