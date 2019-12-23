@@ -7,7 +7,7 @@ class SectionSerializer(serializers.ModelSerializer):
     class Meta:
         model = Section
         fields = ('section_id', 'section_type', 'need_clearance', 'registered', 'instructor',
-                  'location', 'start', 'end', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun')
+                  'location', 'start', 'end', 'days')
 
 
 class CourseSerializer(serializers.ModelSerializer):

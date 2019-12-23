@@ -1,5 +1,6 @@
 from django.db import models
-from .validators import validate_termcode
+from .validators import validate_termcode, validate_days_array
+from django.contrib.postgres.fields import ArrayField
 
 # Create your models here.
 
@@ -28,13 +29,7 @@ class Section(models.Model):
     location = models.CharField(max_length=20, blank=True)
     start = models.TimeField(blank=True, null=True)
     end = models.TimeField(blank=True, null=True)
-    mon = models.BooleanField()
-    tue = models.BooleanField()
-    wed = models.BooleanField()
-    thu = models.BooleanField()
-    fri = models.BooleanField()
-    sat = models.BooleanField()
-    sun = models.BooleanField()
+    days = ArrayField(models.PositiveSmallIntegerField(), size=7, validators=[validate_days_array, ])
 
     def __str__(self):
         semesters = ['Spring', 'Summer', 'Fall']
