@@ -5,9 +5,12 @@ from .validators import validate_termcode
 
 
 class Course(models.Model):
-    name = models.CharField(max_length=20, unique=True)
+    name = models.CharField(max_length=20)
     term = models.PositiveIntegerField(validators=[validate_termcode, ])
     updated = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        unique_together = ('name', 'term')
 
     def __str__(self):
         semesters = ['Spring', 'Summer', 'Fall']
@@ -15,7 +18,8 @@ class Course(models.Model):
 
 
 class Section(models.Model):
-    course = models.ForeignKey(Course, on_delete=models.CASCADE)
+    course = models.ForeignKey(
+        Course, related_name='sections', on_delete=models.CASCADE)
     section_id = models.PositiveIntegerField(primary_key=True)
     section_type = models.CharField(max_length=20)
     need_clearance = models.BooleanField()

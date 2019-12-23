@@ -37,6 +37,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'rest_framework',
     'courses',
 ]
 
@@ -119,3 +120,8 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/3.0/howto/static-files/
 
 STATIC_URL = '/static/'
+
+# USC Schedule of Class scraping settings
+
+USC_SOC_URL = 'https://classes.usc.edu/term-{term}/classes/{course}'
+USC_SOC_TIMEOUT = 5
