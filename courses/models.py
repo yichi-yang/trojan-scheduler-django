@@ -29,7 +29,8 @@ class Section(models.Model):
     location = models.CharField(max_length=20, blank=True)
     start = models.TimeField(blank=True, null=True)
     end = models.TimeField(blank=True, null=True)
-    days = ArrayField(models.PositiveSmallIntegerField(), size=7, validators=[validate_days_array, ])
+    days = ArrayField(models.PositiveSmallIntegerField(),
+                      size=7, validators=[validate_days_array, ], blank=True)
 
     def __str__(self):
         semesters = ['Spring', 'Summer', 'Fall']

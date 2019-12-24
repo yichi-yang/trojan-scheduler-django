@@ -127,5 +127,6 @@ STATIC_URL = '/static/'
 
 # USC Schedule of Class scraping settings
 
-USC_SOC_URL = 'https://classes.usc.edu/term-{term}/classes/{course}'
-USC_SOC_TIMEOUT = 5
+USC_SOC_SCRAPER_URL = 'https://classes.usc.edu/term-{term}/classes/{course}'
+USC_SOC_SCRAPER_TIMEOUT = 5
+USC_SOC_CACHE_REFRESH = 30
