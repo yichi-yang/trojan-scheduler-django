@@ -1,6 +1,7 @@
 from django.db import models
 from .validators import validate_termcode, validate_days_array
 from django.contrib.postgres.fields import ArrayField
+from django.core.exceptions import ValidationError
 
 # Create your models here.
 
@@ -21,16 +22,21 @@ class Course(models.Model):
 class Section(models.Model):
     course = models.ForeignKey(
         Course, related_name='sections', on_delete=models.CASCADE)
-    section_id = models.PositiveIntegerField(primary_key=True)
-    section_type = models.CharField(max_length=20)
+    section_id = models.PositiveIntegerField()
+    section_type = models.CharField(max_length=30)
     need_clearance = models.BooleanField()
-    registered = models.CharField(max_length=20)
-    instructor = models.CharField(max_length=20, blank=True)
-    location = models.CharField(max_length=20, blank=True)
+    registered = models.CharField(max_length=30)
+    instructor = models.CharField(max_length=100, blank=True)
+    location = models.CharField(max_length=30, blank=True)
     start = models.TimeField(blank=True, null=True)
     end = models.TimeField(blank=True, null=True)
     days = ArrayField(models.PositiveSmallIntegerField(),
                       size=7, validators=[validate_days_array, ], blank=True)
+
+    def validate_unique(self, exclude=None):
+        if Section.objects.exclude(id=self.id).filter(section_id=self.section_id, course__term=self.course.term).exists():
+            raise ValidationError("Section must have unique(course.term, section_id)")
+        super(Section, self).validate_unique(exclude)
 
     def __str__(self):
         semesters = ['Spring', 'Summer', 'Fall']

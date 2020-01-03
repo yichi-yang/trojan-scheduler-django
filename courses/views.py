@@ -1,7 +1,7 @@
 from django.shortcuts import render
 from rest_framework import viewsets
 from .models import Course, Section
-from .serializers import CourseSerializer
+from .serializers import CourseSerializer, SectionDetailSerializer
 from django.db import transaction
 from rest_framework.response import Response
 from rest_framework import status
@@ -18,6 +18,19 @@ class CourseView(viewsets.ModelViewSet):
 
     def get_queryset(self):
         return Course.objects.all().filter(term=self.kwargs['term'])
+
+    def get_object_or_none(self, name, lock=False):
+        queryset = self.filter_queryset(self.get_queryset())
+        if lock:
+            queryset = queryset.select_for_update()
+        instance = None
+        try:
+            instance = queryset.get(name=name)
+        except Course.DoesNotExist:
+            pass
+        if instance is not None:
+            self.check_object_permissions(self.request, instance)
+        return instance
 
     def update(self, request, *args, **kwargs):
         with transaction.atomic():
@@ -39,12 +52,7 @@ class CourseView(viewsets.ModelViewSet):
             name = self.kwargs['name']
             term = self.kwargs['term']
 
-            instance = None
-            try:
-                instance = self.filter_queryset(
-                    self.get_queryset()).select_for_update().get(name=name)
-            except Course.DoesNotExist:
-                pass
+            instance = self.get_object_or_none(name, lock=True)
 
             # if the Course instance exists in the database and is up to date,
             # return that Course instance
@@ -58,19 +66,14 @@ class CourseView(viewsets.ModelViewSet):
             # if fetch fails, return cached Course instance if possible
             if not course:
                 if instance:
-                    Response(self.get_serializer(instance).data)
+                    return Response(self.get_serializer(instance).data)
                 else:
                     return Response(status=status.HTTP_404_NOT_FOUND)
 
             # if fetched course's name does not match current instance,
             # select the new one to match
             if course['name'] != name:
-                instance = None
-                try:
-                    instance = self.filter_queryset(
-                        self.get_queryset()).select_for_update().get(name=course['name'])
-                except Course.DoesNotExist:
-                    pass
+                instance = self.get_object_or_none(course['name'], lock=True)
 
             serializer = self.get_serializer(
                 instance, data=course, partial=False)
@@ -83,3 +86,12 @@ class CourseView(viewsets.ModelViewSet):
                 instance._prefetched_objects_cache = {}
 
         return Response(serializer.data)
+
+
+class SectionView(viewsets.ModelViewSet):
+
+    serializer_class = SectionDetailSerializer
+    lookup_field = 'section_id'
+
+    def get_queryset(self):
+        return Section.objects.all().filter(course__term=self.kwargs['term'])

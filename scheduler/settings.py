@@ -71,6 +71,12 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'scheduler.wsgi.application'
 
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+    ),
+}
+
 
 # Database
 # https://docs.djangoproject.com/en/3.0/ref/settings/#databases
@@ -128,5 +134,30 @@ STATIC_URL = '/static/'
 # USC Schedule of Class scraping settings
 
 USC_SOC_SCRAPER_URL = 'https://classes.usc.edu/term-{term}/classes/{course}'
+# USC_SOC_SCRAPER_TIMEZONE =
 USC_SOC_SCRAPER_TIMEOUT = 5
 USC_SOC_CACHE_REFRESH = 30
+
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'console': {
+            # exact format is not important, this is the minimum information
+            'format': '%(asctime)s %(name)-12s %(levelname)-8s %(message)s',
+        },
+    },
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+            'formatter': 'console',
+        },
+    },
+    'loggers': {
+        'courses.scraper': {
+            'handlers': ['console', ],
+            'level': 'INFO',
+        },
+    },
+}

@@ -4,6 +4,12 @@ import re
 import datetime
 from django.conf import settings
 
+# import the logging library
+import logging
+
+# Get an instance of a logger
+logger = logging.getLogger(__name__)
+
 
 def make_section_dict(section_id, section_type, registered, instructor, location, time, days):
 
@@ -46,13 +52,19 @@ def make_section_dict(section_id, section_type, registered, instructor, location
 
 def fetch_class(term, course_name):
 
+    logger.info('Fetch {term} {course}'.format(term=term, course=course_name))
+
     url = settings.USC_SOC_SCRAPER_URL.format(term=term, course=course_name)
 
     try:
         response = requests.get(url, timeout=settings.USC_SOC_SCRAPER_TIMEOUT)
     except requests.exceptions.ConnectionError:
+        logger.warning('{term} {course} | Connection error'.format(
+            term=term, course=course_name))
         return None
     except requests.exceptions.Timeout:
+        logger.warning('{term} {course} | Timeout'.format(
+            term=term, course=course_name))
         return None
 
     if response:
@@ -62,19 +74,28 @@ def fetch_class(term, course_name):
         section_url = soup.select_one('td.info a.lightbox')
 
         if not section_trs:
+            logger.info('{term} {course} | No sections found'.format(
+                term=term, course=course_name))
             return None
 
         if not section_url or not section_url.attrs.get('href'):
+            logger.warning(
+                '{term} {course} | No section-url found'.format(term=term, course=course_name))
             return None
         match = re.compile(
             r'https:\/\/classes\.usc\.edu\/term-(\d+)\/section\/([a-zA-Z0-9-]+)\/').match(section_url.attrs.get('href'))
         if match:
-            term = match.group(1)
-            name = match.group(2).lower()
+            real_term = match.group(1)
+            real_name = match.group(2).lower()
+            if term != real_term or course_name != real_name:
+                logger.warning('{term} {course} does not match fetched data: {r_term} {r_name}'.format(
+                    term=term, course=course_name, r_term=real_term, r_name=real_name))
         else:
+            logger.warning(
+                '{term} {course} | No match in section-url'.format(term=term, course=course_name))
             return None
 
-        course = {"term": term, "name": name, "sections": []}
+        course = {"term": real_term, "name": real_name, "sections": []}
 
         for section_tr in section_trs:
             section_id = section_tr.find("td", class_="section").get_text()
@@ -92,4 +113,6 @@ def fetch_class(term, course_name):
 
         return course
     else:
+        logger.warning('{term} {course} | No response'.format(
+            term=term, course=course_name))
         return None
