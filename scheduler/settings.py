@@ -135,8 +135,8 @@ STATIC_URL = '/static/'
 
 USC_SOC_SCRAPER_URL = 'https://classes.usc.edu/term-{term}/classes/{course}'
 # USC_SOC_SCRAPER_TIMEZONE =
-USC_SOC_SCRAPER_TIMEOUT = 5
-USC_SOC_CACHE_REFRESH = 30
+USC_SOC_SCRAPER_TIMEOUT = 10
+USC_SOC_CACHE_REFRESH = 5 * 60
 
 
 LOGGING = {

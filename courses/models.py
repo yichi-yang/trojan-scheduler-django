@@ -20,6 +20,9 @@ class Course(models.Model):
 
 
 class Section(models.Model):
+    class Meta:
+        ordering = ['course', 'order_fetched']
+
     course = models.ForeignKey(
         Course, related_name='sections', on_delete=models.CASCADE)
     section_id = models.PositiveIntegerField()
@@ -32,6 +35,7 @@ class Section(models.Model):
     end = models.TimeField(blank=True, null=True)
     days = ArrayField(models.PositiveSmallIntegerField(),
                       size=7, validators=[validate_days_array, ], blank=True)
+    order_fetched = models.PositiveSmallIntegerField()
 
     def validate_unique(self, exclude=None):
         if Section.objects.exclude(id=self.id).filter(section_id=self.section_id, course__term=self.course.term).exists():
