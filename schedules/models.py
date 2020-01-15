@@ -1,6 +1,5 @@
 from django.db import models
 from django.contrib.postgres.fields import ArrayField, JSONField
-from courses.validators import validate_termcode
 from django.conf import settings
 
 # Create your models here.
@@ -13,28 +12,27 @@ class RequestData(models.Model):
 
 class Task(models.Model):
     PENDING = 'PD'
-    IN_PROGRESS = 'IP'
+    PROCESSING = 'PS'
     DONE = 'DN'
     STATUS_CHOICES = [
         (PENDING, 'Pending'),
-        (IN_PROGRESS, 'In Progress'),
+        (PROCESSING, 'Processing'),
         (DONE, 'Done'),
     ]
-    
+
     created = models.DateTimeField(auto_now_add=True)
     status = models.CharField(max_length=2, choices=STATUS_CHOICES)
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         related_name="tasks",
         on_delete=models.CASCADE,
+        blank=True, null=True
     )
     request_data = models.OneToOneField(
-        RequestData, related_name="task", on_delete=models.CASCADE)
+        RequestData, related_name="task", on_delete=models.PROTECT)
 
 
 class Schedule(models.Model):
-    term = models.PositiveIntegerField(validators=[validate_termcode, ])
-    sections = ArrayField(models.PositiveIntegerField())
     early_score = models.FloatField()
     late_score = models.FloatField()
     break_score = models.FloatField()
@@ -42,3 +40,4 @@ class Schedule(models.Model):
     total_score = models.FloatField()
     task = models.ForeignKey(
         Task, related_name='schedules', on_delete=models.PROTECT)
+    public = models.BooleanField(default=False)

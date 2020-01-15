@@ -6,7 +6,7 @@ class SectionSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Section
-        fields = ('section_id', 'section_type', 'need_clearance', 'registered', 'instructor',
+        fields = ('id', 'section_id', 'section_type', 'need_clearance', 'registered', 'instructor',
                   'location', 'start', 'end', 'days', 'order_fetched')
         extra_kwargs = {'order_fetched': {'write_only': True}}
 
@@ -25,10 +25,9 @@ class SectionDetailSerializer(serializers.ModelSerializer):
     updated = serializers.DateTimeField(
         source='course.updated', read_only=True)
 
-    class Meta:
-        model = Section
-        fields = ('course_name', 'term', 'section_id', 'section_type', 'need_clearance', 'registered', 'instructor',
-                  'location', 'start', 'end', 'days', 'updated')
+    class Meta(SectionSerializer.Meta):
+        fields = ('course_name', 'term', 'updated',
+                  *SectionSerializer.Meta.fields)
 
 
 class CourseSerializer(serializers.ModelSerializer):
