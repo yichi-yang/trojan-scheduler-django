@@ -1,12 +1,14 @@
 from django.db import models
 from django.contrib.postgres.fields import ArrayField, JSONField
 from django.conf import settings
+from courses.models import Section
+from .validators import coursebin_validator
 
 # Create your models here.
 
 
 class RequestData(models.Model):
-    coursebin = JSONField()
+    coursebin = JSONField(validators=[coursebin_validator])
     preference = JSONField()
 
 
@@ -14,10 +16,17 @@ class Task(models.Model):
     PENDING = 'PD'
     PROCESSING = 'PS'
     DONE = 'DN'
+    WARNING = 'WN'
+    ERROR = 'ER'
+    EXCEPT = 'EX'
+
     STATUS_CHOICES = [
         (PENDING, 'Pending'),
         (PROCESSING, 'Processing'),
         (DONE, 'Done'),
+        (WARNING, 'Waring'),
+        (ERROR, 'Error'),
+        (EXCEPT, 'Uncaught Exception'),
     ]
 
     created = models.DateTimeField(auto_now_add=True)
@@ -30,6 +39,8 @@ class Task(models.Model):
     )
     request_data = models.OneToOneField(
         RequestData, related_name="task", on_delete=models.PROTECT)
+    name = models.CharField(max_length=100, null=True, default=None)
+    message = models.CharField(max_length=200, null=True, default=None)
 
 
 class Schedule(models.Model):
@@ -41,3 +52,5 @@ class Schedule(models.Model):
     task = models.ForeignKey(
         Task, related_name='schedules', on_delete=models.PROTECT)
     public = models.BooleanField(default=False)
+    sections = models.ManyToManyField(Section)
+    name = models.CharField(max_length=100, blank=True, default="")

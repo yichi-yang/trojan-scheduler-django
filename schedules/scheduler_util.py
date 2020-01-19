@@ -7,7 +7,7 @@ from .models import Schedule
 
 
 def parse_time(str, pattern):
-    return datetime.strptime(str, pattern) - datetime.min
+    return datetime.combine(datetime.min, datetime.strptime(str, pattern).time()) - datetime.min
 
 
 class Timetable:
@@ -63,6 +63,9 @@ class Evaluator:
 
     def __call__(self, sections):
 
+        if [29998, 30239, 30028, 31395, 30997, 31007, 31833, 31834, 29959, 30361, 30222, 25800, 25802, ] == [section["section_id"] for section in sections]:
+            print('xxx')
+
         early_time = parse_time(
             self.preference["early_time"], "%H:%M")
         late_time = parse_time(
@@ -77,19 +80,19 @@ class Evaluator:
             if time >= early_time:
                 return 0
             else:
-                return (early_time - time).total_seconds() * early_weight
+                return (early_time - time).total_seconds() * early_weight / 2000
 
         def late_evaluator(time):
             if time <= late_time:
                 return 0
             else:
-                return (time - late_time).total_seconds() * late_weight
+                return (time - late_time).total_seconds() * late_weight / 2000
 
         def break_evaluator(time):
             if time <= break_time:
                 return 0
             else:
-                return (time - break_time).total_seconds() * break_weight
+                return (time - break_time).total_seconds() * break_weight / 2000
 
         reserved_slots = []
 
@@ -113,17 +116,19 @@ class Evaluator:
         reserved_score = 0
 
         for day in timetable.timetable:
+
+            # only calculate cost when there are sections on a day
             if len(day) == 0:
-                start = timedelta(hours=23, minutes=59,
-                                  seconds=59, microseconds=999999)
-                end = timedelta(0)
-            else:
-                start = day[0][0]
-                end = day[-1][1]
+                continue
+
+            start = day[0][0]
+            end = day[-1][1]
+
             early_score += early_evaluator(start)
             late_score += late_evaluator(end)
 
-            reserved_slots_copy = [*reserved_slots]
+            reserved_slots_copy = list(filter(lambda slot: not (
+                slot[0] <= start or slot[0] >= end), reserved_slots))
 
             for index in range(len(day) - 1):
                 break_start = day[index][1]
@@ -197,7 +202,10 @@ def part_combo_to_component_list(part_combinations):
     return component_list
 
 
-def dfs(components, index, selected, timetable, evaluator):
+def dfs_search(components, index, selected, timetable, evaluator):
+
+    if not components:
+        return
 
     if index >= len(components):
         evaluator(selected)
@@ -209,26 +217,29 @@ def dfs(components, index, selected, timetable, evaluator):
             continue
 
         timetable_copy = timetable.clone()
+        is_valid = True
         if section["start"] and section["end"]:
             for day in section["days"]:
                 if not timetable_copy.insert(day, parse_time(section["start"], "%H:%M:%S"),
                                              parse_time(section["end"], "%H:%M:%S")):
+                    is_valid = False
                     continue
 
-        selected.append(section)
-        dfs(components, index+1, selected, timetable_copy, evaluator)
-        selected.pop()
+        if is_valid:
+            selected.append(section)
+            dfs_search(components, index+1, selected, timetable_copy, evaluator)
+            selected.pop()
 
 
 def generate_schedule(coursebin, preference, task_instance):
 
     part_combinations = itertools.product(*part_list_from_coursebin(coursebin))
 
-    evaluator = Evaluator(preference, 50)
+    evaluator = Evaluator(preference, 20)
 
     for combination in part_combinations:
         component_list = part_combo_to_component_list(combination)
-        dfs(component_list, 0, list(), Timetable(), evaluator)
+        dfs_search(component_list, 0, list(), Timetable(), evaluator)
 
     results = evaluator.get_results()
     for result in results:

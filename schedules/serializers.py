@@ -9,7 +9,7 @@ class ScheduleSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Schedule
-        fields = ('id', 'sections', 'early_score', 'late_score',
+        fields = ('id', 'name', 'sections', 'early_score', 'late_score',
                   'break_score', 'reserved_score', 'total_score', 'task')
         extra_kwargs = {'task': {"style": {
             'base_template': 'input.html',
@@ -21,7 +21,7 @@ class TaskSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Task
-        fields = ('id', 'created', 'user', 'status', 'request_data')
+        fields = ('id', 'name', 'created', 'user', 'status', 'request_data')
 
 
 class TaskDetailSerializer(serializers.ModelSerializer):

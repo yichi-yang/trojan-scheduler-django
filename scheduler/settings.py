@@ -76,6 +76,8 @@ REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework_simplejwt.authentication.JWTAuthentication',
     ),
+    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.LimitOffsetPagination',
+    'PAGE_SIZE': 20,
 }
 
 
@@ -135,7 +137,6 @@ STATIC_URL = '/static/'
 # USC Schedule of Class scraping settings
 
 USC_SOC_SCRAPER_URL = 'https://classes.usc.edu/term-{term}/classes/{course}'
-# USC_SOC_SCRAPER_TIMEZONE =
 USC_SOC_SCRAPER_TIMEOUT = 10
 USC_SOC_CACHE_REFRESH = 5 * 60
 
@@ -160,5 +161,9 @@ LOGGING = {
             'handlers': ['console', ],
             'level': 'INFO',
         },
+        # 'django.db.backends': {
+        #     'level': 'DEBUG',
+        #     'handlers': ['console'],
+        # },
     },
 }

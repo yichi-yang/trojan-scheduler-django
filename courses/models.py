@@ -2,7 +2,6 @@ from django.db import models
 from .validators import validate_termcode, validate_days_array
 from django.contrib.postgres.fields import ArrayField
 from django.core.exceptions import ValidationError
-from schedules.models import Schedule
 
 # Create your models here.
 
@@ -37,7 +36,6 @@ class Section(models.Model):
     days = ArrayField(models.PositiveSmallIntegerField(),
                       size=7, validators=[validate_days_array, ], blank=True)
     order_fetched = models.PositiveSmallIntegerField()
-    schedules = models.ManyToManyField(Schedule, related_name='sections')
 
     def validate_unique(self, exclude=None):
         if Section.objects.exclude(id=self.id).filter(section_id=self.section_id, course__term=self.course.term).exists():

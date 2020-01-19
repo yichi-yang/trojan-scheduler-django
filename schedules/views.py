@@ -1,18 +1,23 @@
 from django.shortcuts import render
 from rest_framework import viewsets
 from rest_framework import mixins
-from .models import Task, Schedule
+from .models import Task, Schedule, RequestData
 from .serializers import TaskSerializer, TaskDetailSerializer, RequestDataSerializer, ScheduleSerializer
 from rest_framework import status
 from rest_framework.response import Response
-from .generate_schedule import generate_schedule
+from django.db.models import Prefetch
+from courses.models import Section
+from .tasks import generate_schedule
 
 # Create your views here.
 
 
 class TaskView(viewsets.GenericViewSet, mixins.ListModelMixin, mixins.RetrieveModelMixin, mixins.CreateModelMixin):
 
-    queryset = Task.objects.all().prefetch_related("schedules")
+    queryset = Task.objects.all().prefetch_related("schedules", Prefetch(
+        "schedules__sections",
+        queryset=Section.objects.all().select_related('course')
+    ))
 
     def create(self, request, *args, **kwargs):
 
@@ -31,24 +36,30 @@ class TaskView(viewsets.GenericViewSet, mixins.ListModelMixin, mixins.RetrieveMo
 
         serializer = self.get_serializer(data=task_data)
         serializer.is_valid(raise_exception=True)
-        task_instance = self.perform_create(serializer)
+        task_instance = serializer.save()
 
-        generate_schedule(request_data['coursebin'],
-                          request_data['preference'],
-                          task_instance)
+        generate_schedule.delay(request_data['coursebin'],
+                                request_data['preference'],
+                                task_instance.id)
 
         headers = self.get_success_headers(serializer.data)
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
-
-    def perform_create(self, serializer):
-        return serializer.save()
 
     def get_serializer_class(self):
         if self.action == 'list':
             return TaskSerializer
         return TaskDetailSerializer
 
+
 class ScheduleView(viewsets.ModelViewSet):
 
-    queryset = Schedule.objects.all().prefetch_related("sections").prefetch_related("task")
+    queryset = Schedule.objects.all().prefetch_related(Prefetch(
+        "sections",
+        queryset=Section.objects.all().select_related('course')
+    ))
     serializer_class = ScheduleSerializer
+
+
+class RequestDataView(viewsets.ModelViewSet):
+    queryset = RequestData.objects.all()
+    serializer_class = RequestDataSerializer

@@ -17,7 +17,7 @@ class CourseView(viewsets.ModelViewSet):
     lookup_field = 'name'
 
     def get_queryset(self):
-        return Course.objects.all().filter(term=self.kwargs['term'])
+        return Course.objects.all().filter(term=self.kwargs['term']).prefetch_related("sections")
 
     def get_object_or_none(self, name, lock=False):
         queryset = self.filter_queryset(self.get_queryset())
@@ -94,4 +94,4 @@ class SectionView(viewsets.ModelViewSet):
     lookup_field = 'section_id'
 
     def get_queryset(self):
-        return Section.objects.all().filter(course__term=self.kwargs['term'])
+        return Section.objects.all().filter(course__term=self.kwargs['term']).select_related("course")
