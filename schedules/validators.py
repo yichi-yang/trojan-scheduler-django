@@ -37,3 +37,33 @@ def coursebin_validator(section_list):
                     _('%(value)s does not have a valid group'),
                     params={'value': node},
                 )
+
+
+def preference_validator(preference):
+    if not preference:
+        raise ValidationError("preference cannot be empty")
+
+    early_time = preference.get("early_time")
+    late_time = preference.get("late_time")
+    break_time = preference.get("break_time")
+
+    early_weight = preference.get("early_weight")
+    late_weight = preference.get("late_weight")
+    break_weight = preference.get("break_weight")
+
+    reserved = preference.get("reserved")
+
+    if not early_weight or not (isinstance(early_weight, int) or isinstance(early_weight, float)):
+        raise ValidationError("invalid early_weight")
+
+    if not late_weight or not (isinstance(late_weight, int) or isinstance(late_weight, float)):
+        raise ValidationError("invalid late_weight")
+
+    if not break_weight or not (isinstance(break_weight, int) or isinstance(break_weight, float)):
+        raise ValidationError("invalid break_weight")
+
+    if not reserved:
+        raise ValidationError("reserved cannot be empty")
+
+    for slot in reserved:
+        pass

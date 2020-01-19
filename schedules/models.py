@@ -2,14 +2,14 @@ from django.db import models
 from django.contrib.postgres.fields import ArrayField, JSONField
 from django.conf import settings
 from courses.models import Section
-from .validators import coursebin_validator
+from .validators import coursebin_validator, preference_validator
 
 # Create your models here.
 
 
 class RequestData(models.Model):
-    coursebin = JSONField(validators=[coursebin_validator])
-    preference = JSONField()
+    coursebin = JSONField(validators=[coursebin_validator, ])
+    preference = JSONField(validators=[preference_validator, ])
 
 
 class Task(models.Model):

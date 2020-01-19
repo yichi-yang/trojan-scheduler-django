@@ -4,10 +4,58 @@ import bisect
 import heapq
 from datetime import datetime, time, timedelta
 from .models import Schedule
+from datetime import datetime
+
+
+class SchedulerException(Exception):
+    pass
+
+
+class UncaughtSchedulerException(SchedulerException):
+    def __init__(self, exception, name, task, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.exception = exception
+        self.name = name
+        self.task = task
+
+    def __str__(self):
+        return "{} task-{}: {}".format(self.name, self.task, self.exception.__str__())
+
+
+class TimeoutException(SchedulerException):
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+    def __str__(self):
+        return "Scheduler timeout"
+
+
+class MalformedCoursebinException(SchedulerException):
+    def __init__(self, exception, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.exception = exception
+
+    def __str__(self):
+        return self.exception.__str__()
+
+
+class TimeFormatException(SchedulerException):
+    def __init__(self, exception, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.exception = exception
+
+    def __str__(self):
+        return self.exception.__str__()
 
 
 def parse_time(str, pattern):
-    return datetime.combine(datetime.min, datetime.strptime(str, pattern).time()) - datetime.min
+    try:
+        result = datetime.combine(datetime.min, datetime.strptime(
+            str, pattern).time()) - datetime.min
+    except ValueError as e:
+        raise TimeFormatException(e) from e
+    return result
 
 
 class Timetable:
@@ -52,6 +100,14 @@ class ResultSchedule:
         if self.ordering_tuple() != rhs.ordering_tuple():
             return self.ordering_tuple() > rhs.ordering_tuple()
         return self.sections < rhs.sections
+
+    def toDict(self):
+        return {
+            "early_score": self.early_score,
+            "late_score": self.late_score,
+            "break_score": self.break_score,
+            "reserved_score": self.reserved_score,
+            "total_score": self.total_score}
 
 
 class Evaluator:
@@ -202,8 +258,10 @@ def part_combo_to_component_list(part_combinations):
     return component_list
 
 
-def dfs_search(components, index, selected, timetable, evaluator):
+def dfs_search(components, index, selected, timetable, evaluator, terminate_at):
 
+    if terminate_at and datetime.now() > terminate_at:
+        raise TimeoutException()
     if not components:
         return
 
@@ -227,28 +285,6 @@ def dfs_search(components, index, selected, timetable, evaluator):
 
         if is_valid:
             selected.append(section)
-            dfs_search(components, index+1, selected, timetable_copy, evaluator)
+            dfs_search(components, index+1, selected,
+                       timetable_copy, evaluator, terminate_at)
             selected.pop()
-
-
-def generate_schedule(coursebin, preference, task_instance):
-
-    part_combinations = itertools.product(*part_list_from_coursebin(coursebin))
-
-    evaluator = Evaluator(preference, 20)
-
-    for combination in part_combinations:
-        component_list = part_combo_to_component_list(combination)
-        dfs_search(component_list, 0, list(), Timetable(), evaluator)
-
-    results = evaluator.get_results()
-    for result in results:
-        schedule_instance = Schedule(task=task_instance,
-                                     early_score=result.early_score,
-                                     late_score=result.late_score,
-                                     break_score=result.break_score,
-                                     reserved_score=result.reserved_score,
-                                     total_score=result.total_score,
-                                     public=not task_instance.user)
-        schedule_instance.save()
-        schedule_instance.sections.add(*result.sections)
