@@ -12,7 +12,7 @@ import celery
 
 import logging
 
-logger = logging.getLogger('celery.tasks').propagate = False
+logger = logging.getLogger('celery.tasks')
 
 
 class LogErrorsTask(celery.Task):
@@ -49,6 +49,8 @@ def generate_schedule(coursebin, preference, task_id, time_limit=None):
         finally:
             # get schedules from the evatutor
             results = evaluator.get_results()
+            # save count
+            task_instance.count = evaluator.count
             # save all schedules
             with transaction.atomic():
                 for result in results:

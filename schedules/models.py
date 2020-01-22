@@ -41,6 +41,7 @@ class Task(models.Model):
         RequestData, related_name="task", on_delete=models.PROTECT)
     name = models.CharField(max_length=100, null=True, default=None)
     message = models.CharField(max_length=200, null=True, default=None)
+    count = models.PositiveIntegerField(default=0)
 
 
 class Schedule(models.Model):
