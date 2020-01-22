@@ -84,6 +84,25 @@ class Timetable:
         return Timetable(timetable_copy)
 
 
+class TimeSlot:
+    def __init__(self, start, end, wiggle, weight):
+        self.start = start
+        self.end = end
+        self.wiggle = wiggle
+        self.weight = weight
+        self.lower = self.start - self.wiggle
+        self.upper = self.end + wiggle
+        self.length = self.end - self.start
+
+    def fits_in(self, break_start, break_end):
+        real_start = max(self.lower, break_start)
+        real_end = min(self.upper, break_end)
+        if real_start > real_end:
+            return False
+        break_len = real_end - real_start
+        return break_len >= self.length
+
+
 class ResultSchedule:
     def __init__(self, sections, early_score, late_score, break_score, reserved_score):
         self.sections = sections
@@ -119,9 +138,6 @@ class Evaluator:
 
     def __call__(self, sections):
 
-        if [29998, 30239, 30028, 31395, 30997, 31007, 31833, 31834, 29959, 30361, 30222, 25800, 25802, ] == [section["section_id"] for section in sections]:
-            print('xxx')
-
         early_time = parse_time(
             self.preference["early_time"], "%H:%M")
         late_time = parse_time(
@@ -153,9 +169,10 @@ class Evaluator:
         reserved_slots = []
 
         for slot in self.preference["reserved"]:
-            reserved_slots.append((parse_time(slot["time"], "%H:%M"),
-                                   parse_time(slot["length"], "%H:%M"),
-                                   slot["weight"]))
+            reserved_slots.append(TimeSlot(parse_time(slot["from"], "%H:%M"),
+                                           parse_time(slot["to"], "%H:%M"),
+                                           parse_time(slot["wiggle"], "%H:%M"),
+                                           slot["weight"]))
 
         timetable = Timetable()
 
@@ -171,6 +188,7 @@ class Evaluator:
         break_score = 0
         reserved_score = 0
 
+        # loop through days
         for day in timetable.timetable:
 
             # only calculate cost when there are sections on a day
@@ -183,27 +201,27 @@ class Evaluator:
             early_score += early_evaluator(start)
             late_score += late_evaluator(end)
 
-            reserved_slots_copy = list(filter(lambda slot: not (
-                slot[0] <= start or slot[0] >= end), reserved_slots))
+            reserved_slots_copy = [slot for slot in reserved_slots
+                                   if not (slot.fits_in(timedelta(0), start)
+                                           or slot.fits_in(end, timedelta(days=1)))]
 
+            # loop through breaks of that day
             for index in range(len(day) - 1):
                 break_start = day[index][1]
                 break_end = day[index + 1][0]
+                break_len = break_end - break_start
 
-                is_reserved = False
+                original_len = len(reserved_slots_copy)
 
-                for slot in reserved_slots_copy:
-                    if break_start <= slot[0] and slot[0] <= break_end\
-                            and break_end - break_start >= slot[1]:
-                        is_reserved = True
-                        reserved_slots_copy.remove(slot)
-                        break
+                reserved_slots_copy = [slot for slot in reserved_slots_copy
+                                       if not slot.fits_in(break_start, break_end)]
 
-                if not is_reserved:
-                    break_score += break_evaluator(break_end - break_start)
+                # if the break does not satisfy any reserved slots
+                if len(reserved_slots_copy) == original_len:
+                    break_score += break_evaluator(break_len)
 
             for slot in reserved_slots_copy:
-                reserved_score += slot[2]
+                reserved_score += slot.weight
 
         schedule = ResultSchedule([section["id"] for section in sections],
                                   early_score, late_score, break_score, reserved_score)
