@@ -3,8 +3,8 @@ from rest_framework import routers
 from .views import TaskView, ScheduleView, RequestDataView
 
 router = routers.DefaultRouter()
-router.register('tasks', TaskView)
-router.register('schedules', ScheduleView)
+router.register('tasks', TaskView, basename="tasks")
+router.register('schedules', ScheduleView, basename="schedules")
 router.register('task-data', RequestDataView)
 
 urlpatterns = [

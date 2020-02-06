@@ -8,16 +8,25 @@ from rest_framework.response import Response
 from django.db.models import Prefetch
 from courses.models import Section
 from .tasks import generate_schedule
+from .permissions import TaskOwnerOnly, ScheduleOwnerOnly
 
 # Create your views here.
 
 
 class TaskView(viewsets.GenericViewSet, mixins.ListModelMixin, mixins.RetrieveModelMixin, mixins.CreateModelMixin):
 
-    queryset = Task.objects.all().prefetch_related("schedules", Prefetch(
-        "schedules__sections",
-        queryset=Section.objects.all().select_related('course')
-    ))
+    def get_queryset(self):
+        user_pk = self.request.user.pk if self.request.user.is_authenticated else None
+        if self.action == 'list':
+            query_set = Task.objects.filter(user=user_pk)
+        else:
+            query_set = Task.objects.all()
+        return query_set.prefetch_related("schedules", Prefetch(
+            "schedules__sections",
+            queryset=Section.objects.all().select_related('course')
+        ))
+
+    permission_classes = [TaskOwnerOnly]
 
     def create(self, request, *args, **kwargs):
 
@@ -30,7 +39,7 @@ class TaskView(viewsets.GenericViewSet, mixins.ListModelMixin, mixins.RetrieveMo
 
         task_data = {
             "status": Task.PENDING,
-            "user": None,
+            "user": request.user.pk if request.user.is_authenticated else None,
             "request_data": request_data_instance.pk
         }
 
@@ -53,10 +62,25 @@ class TaskView(viewsets.GenericViewSet, mixins.ListModelMixin, mixins.RetrieveMo
 
 class ScheduleView(viewsets.ModelViewSet):
 
-    queryset = Schedule.objects.all().prefetch_related(Prefetch(
-        "sections",
-        queryset=Section.objects.all().select_related('course')
-    ))
+    permission_classes = [ScheduleOwnerOnly]
+
+    def get_queryset(self):
+        user_pk = self.request.user.pk if self.request.user.is_authenticated else None
+        if self.action == 'list':
+            saved_para = self.request.query_params.get('saved', None)
+            saved_val = saved_para in ["", "True", "true"]
+            if saved_para is not None:
+                query_set = Schedule.objects.filter(
+                    task__user=user_pk, saved=saved_val)
+            else:
+                query_set = Schedule.objects.filter(task__user=user_pk)
+        else:
+            query_set = Schedule.objects.all()
+        return query_set.prefetch_related(Prefetch(
+            "sections",
+            queryset=Section.objects.all().select_related('course')
+        ))
+
     serializer_class = ScheduleSerializer
 
 

@@ -62,8 +62,8 @@ def preference_validator(preference):
     if not break_weight or not (isinstance(break_weight, int) or isinstance(break_weight, float)):
         raise ValidationError("invalid break_weight")
 
-    if not reserved:
-        raise ValidationError("reserved cannot be empty")
+    if not isinstance(reserved, list):
+        raise ValidationError("invalid reserved")
 
     for slot in reserved:
         pass

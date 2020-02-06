@@ -13,6 +13,10 @@ class RequestData(models.Model):
 
 
 class Task(models.Model):
+
+    class Meta:
+        ordering = ['-created']
+
     PENDING = 'PD'
     PROCESSING = 'PS'
     DONE = 'DN'
@@ -45,6 +49,10 @@ class Task(models.Model):
 
 
 class Schedule(models.Model):
+
+    class Meta:
+        ordering = ['-task', 'id']
+
     early_score = models.FloatField()
     late_score = models.FloatField()
     break_score = models.FloatField()
@@ -55,3 +63,4 @@ class Schedule(models.Model):
     public = models.BooleanField(default=False)
     sections = models.ManyToManyField(Section)
     name = models.CharField(max_length=100, blank=True, default="")
+    saved = models.BooleanField(default=False)
