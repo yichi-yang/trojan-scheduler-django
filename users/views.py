@@ -13,5 +13,5 @@ class UserView(viewsets.GenericViewSet,
                mixins.UpdateModelMixin):
 
     permission_classes = [UserOwnerOnly]
-    queryset = get_user_model().objects.all().select_related("profile")
+    queryset = get_user_model().objects.all()
     serializer_class = UserSerializer

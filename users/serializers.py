@@ -1,7 +1,5 @@
 from rest_framework import serializers
 from django.contrib.auth import get_user_model
-from django.db import transaction
-from .models import Profile
 
 
 # https://stackoverflow.com/questions/16857450/how-to-register-users-in-django-rest-framework
@@ -9,35 +7,27 @@ from .models import Profile
 class UserSerializer(serializers.ModelSerializer):
 
     password = serializers.CharField(write_only=True)
-    avatar = serializers.URLField(source='profile.avatar')
 
-    @transaction.atomic
     def create(self, validated_data):
 
-        profile_data = validated_data.pop("profile")
-
-        user = self.Meta.model.objects.create(
-            username=validated_data['username']
-        )
-        user.set_password(validated_data['password'])
-        user.save()
-
-        profile = Profile.objects.create(user=user, **profile_data)
-        profile.save()
-
+        user = self.Meta.model.objects.create_user(**validated_data)
         return user
 
-    @transaction.atomic
     def update(self, instance, validated_data):
-        profile_data = validated_data.pop("profile")
-        for key, val in profile_data.items():
-            setattr(instance.profile, key, val)
-        instance.profile.save()
+
+        if "password" in validated_data:
+            password = validated_data.pop("password")
+            instance.set_password(password)
+
+        email_field_name = self.Meta.model.get_email_field_name()
+        if email_field_name in validated_data and validated_data[email_field_name] != getattr(instance, email_field_name):
+            validated_data["email_verified"] = False
+            
         return super().update(instance, validated_data)
 
     class Meta:
         model = get_user_model()
         # Tuple of serialized model fields (see link [2])
         fields = ("id", "username", "password", "first_name",
-                  "last_name", "email", "date_joined", "avatar")
-        read_only_fields = ['date_joined']
+                  "last_name", "email", "date_joined", "avatar", "email_verified")
+        read_only_fields = ["date_joined", "email_verified"]

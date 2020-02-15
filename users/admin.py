@@ -1,5 +1,15 @@
 from django.contrib import admin
-from .models import Profile
+from django.contrib.auth.admin import UserAdmin
+from .models import User
 
-# Register your models here.
-admin.site.register(Profile)
+
+class CustomUserAdmin(UserAdmin):
+    fieldsets = UserAdmin.fieldsets + (
+        ("Misc", {'fields': ('avatar', 'email_verified')}),
+    )
+    add_fieldsets = UserAdmin.add_fieldsets + (
+        ("Misc", {'fields': ('avatar',)}),
+    )
+
+
+admin.site.register(User, CustomUserAdmin)
