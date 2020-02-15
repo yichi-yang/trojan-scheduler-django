@@ -5,16 +5,26 @@ from courses.serializers import SectionDetailSerializer
 
 class ScheduleSerializer(serializers.ModelSerializer):
 
-    sections = SectionDetailSerializer(many=True, read_only=True)
+    created = serializers.DateTimeField(source="task.created", read_only=True)
+    user = serializers.PrimaryKeyRelatedField(
+        source="task.user", read_only=True)
 
     class Meta:
         model = Schedule
-        fields = ('id', 'name', 'sections', 'early_score', 'late_score',
-                  'break_score', 'reserved_score', 'total_score', 'task')
+        fields = ('id', 'name', 'early_score', 'late_score', 'break_score',
+                  'reserved_score', 'total_score', 'task', 'created', 'public', 'user')
         extra_kwargs = {'task': {"style": {
             'base_template': 'input.html',
             'input_type': 'text'
         }}}
+
+
+class ScheduleDetailedSerializer(ScheduleSerializer):
+
+    sections = SectionDetailSerializer(many=True, read_only=True)
+
+    class Meta(ScheduleSerializer.Meta):
+        fields = (*ScheduleSerializer.Meta.fields, "sections")
 
 
 class TaskSerializer(serializers.ModelSerializer):
@@ -27,7 +37,7 @@ class TaskSerializer(serializers.ModelSerializer):
 
 class TaskDetailSerializer(serializers.ModelSerializer):
 
-    schedules = ScheduleSerializer(many=True, read_only=True)
+    schedules = ScheduleDetailedSerializer(many=True, read_only=True)
 
     class Meta(TaskSerializer.Meta):
         fields = (*TaskSerializer.Meta.fields, 'schedules')

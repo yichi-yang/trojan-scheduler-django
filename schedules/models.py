@@ -51,7 +51,7 @@ class Task(models.Model):
 class Schedule(models.Model):
 
     class Meta:
-        ordering = ['-task', 'id']
+        ordering = ['-task__created', 'id']
 
     early_score = models.FloatField()
     late_score = models.FloatField()

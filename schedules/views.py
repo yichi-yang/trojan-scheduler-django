@@ -2,7 +2,7 @@ from django.shortcuts import render
 from rest_framework import viewsets
 from rest_framework import mixins
 from .models import Task, Schedule, RequestData
-from .serializers import TaskSerializer, TaskDetailSerializer, RequestDataSerializer, ScheduleSerializer
+from .serializers import TaskSerializer, TaskDetailSerializer, RequestDataSerializer, ScheduleSerializer, ScheduleDetailedSerializer
 from rest_framework import status
 from rest_framework.response import Response
 from django.db.models import Prefetch
@@ -13,7 +13,8 @@ from .permissions import TaskOwnerOnly, ScheduleOwnerOnly
 # Create your views here.
 
 
-class TaskView(viewsets.GenericViewSet, mixins.ListModelMixin, mixins.RetrieveModelMixin, mixins.CreateModelMixin):
+class TaskView(viewsets.GenericViewSet, mixins.ListModelMixin, mixins.RetrieveModelMixin,
+               mixins.CreateModelMixin, mixins.DestroyModelMixin):
 
     def get_queryset(self):
         user_pk = self.request.user.pk if self.request.user.is_authenticated else None
@@ -81,7 +82,10 @@ class ScheduleView(viewsets.ModelViewSet):
             queryset=Section.objects.all().select_related('course')
         ))
 
-    serializer_class = ScheduleSerializer
+    def get_serializer_class(self):
+        if self.action == 'list':
+            return ScheduleSerializer
+        return ScheduleDetailedSerializer
 
 
 class RequestDataView(viewsets.ModelViewSet):
