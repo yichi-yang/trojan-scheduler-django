@@ -10,15 +10,21 @@ class SectionSerializer(serializers.ModelSerializer):
                   'location', 'start', 'end', 'days', 'order_fetched')
         extra_kwargs = {'order_fetched': {'write_only': True}}
 
+    @classmethod
+    def eager_load(cls, queryset):
+        return queryset
 
-class SectionNotUniqueSerializer(serializers.ModelSerializer):
+
+class SectionNotUniqueSerializer(SectionSerializer):
 
     class Meta(SectionSerializer.Meta):
         extra_kwargs = {'section_id': {'validators': []},
                         **SectionSerializer.Meta.extra_kwargs}
 
 
-class SectionDetailSerializer(serializers.ModelSerializer):
+
+
+class SectionDetailSerializer(SectionSerializer):
 
     course_name = serializers.CharField(source='course.name', read_only=True)
     term = serializers.IntegerField(source='course.term', read_only=True)
@@ -28,6 +34,10 @@ class SectionDetailSerializer(serializers.ModelSerializer):
     class Meta(SectionSerializer.Meta):
         fields = ('course_name', 'term', 'updated',
                   *SectionSerializer.Meta.fields)
+    
+    @classmethod
+    def eager_load(cls, queryset):
+        return queryset.select_related("course")
 
 
 class CourseSerializer(serializers.ModelSerializer):
@@ -83,3 +93,7 @@ class CourseSerializer(serializers.ModelSerializer):
         instance.save()
 
         return instance
+
+    @classmethod
+    def eager_load(cls, queryset):
+        return queryset.prefetch_related("sections")

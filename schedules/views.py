@@ -19,13 +19,10 @@ class TaskView(viewsets.GenericViewSet, mixins.ListModelMixin, mixins.RetrieveMo
     def get_queryset(self):
         user_pk = self.request.user.pk if self.request.user.is_authenticated else None
         if self.action == 'list':
-            query_set = Task.objects.filter(user=user_pk)
+            queryset = Task.objects.filter(user=user_pk)
         else:
-            query_set = Task.objects.all()
-        return query_set.prefetch_related("schedules", Prefetch(
-            "schedules__sections",
-            queryset=Section.objects.all().select_related('course')
-        ))
+            queryset = Task.objects.all()
+        return self.get_serializer_class().eager_load(queryset)
 
     permission_classes = [TaskOwnerOnly]
 
@@ -71,21 +68,21 @@ class ScheduleView(viewsets.ModelViewSet):
             saved_para = self.request.query_params.get('saved', None)
             saved_val = saved_para in ["", "True", "true"]
             if saved_para is not None:
-                query_set = Schedule.objects.filter(
+                queryset = Schedule.objects.filter(
                     task__user=user_pk, saved=saved_val)
             else:
-                query_set = Schedule.objects.filter(task__user=user_pk)
+                queryset = Schedule.objects.filter(task__user=user_pk)
         else:
-            query_set = Schedule.objects.all()
-        return query_set.prefetch_related(Prefetch(
-            "sections",
-            queryset=Section.objects.all().select_related('course')
-        ))
+            queryset = Schedule.objects.all()
+        return self.get_serializer_class().eager_load(queryset)
 
     def get_serializer_class(self):
         if self.action == 'list':
             return ScheduleSerializer
         return ScheduleDetailedSerializer
+
+    def get_loader(self):
+        return self.get_serializer_class().eager_load
 
 
 class RequestDataView(viewsets.ModelViewSet):

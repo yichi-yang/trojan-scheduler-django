@@ -1,6 +1,8 @@
 from rest_framework import serializers
 from .models import Task, Schedule, RequestData
 from courses.serializers import SectionDetailSerializer
+from django.db.models import Prefetch
+from courses.models import Section
 
 
 class ScheduleSerializer(serializers.ModelSerializer):
@@ -18,6 +20,10 @@ class ScheduleSerializer(serializers.ModelSerializer):
             'input_type': 'text'
         }}}
 
+    @classmethod
+    def eager_load(cls, queryset):
+        return queryset.select_related('task')
+
 
 class ScheduleDetailedSerializer(ScheduleSerializer):
 
@@ -25,6 +31,13 @@ class ScheduleDetailedSerializer(ScheduleSerializer):
 
     class Meta(ScheduleSerializer.Meta):
         fields = (*ScheduleSerializer.Meta.fields, "sections")
+
+    @classmethod
+    def eager_load(cls, queryset):
+        return queryset.select_related('task').prefetch_related(
+            Prefetch("sections",
+                     queryset=Section.objects.all().select_related('course')
+                     ))
 
 
 class TaskSerializer(serializers.ModelSerializer):
@@ -34,6 +47,10 @@ class TaskSerializer(serializers.ModelSerializer):
         fields = ('id', 'name', 'created', 'user',
                   'status', 'request_data', 'message', 'count')
 
+    @classmethod
+    def eager_load(cls, queryset):
+        return queryset
+
 
 class TaskDetailSerializer(serializers.ModelSerializer):
 
@@ -41,6 +58,14 @@ class TaskDetailSerializer(serializers.ModelSerializer):
 
     class Meta(TaskSerializer.Meta):
         fields = (*TaskSerializer.Meta.fields, 'schedules')
+        read_only_fields = ('schedules',)
+
+    @classmethod
+    def eager_load(cls, queryset):
+        return queryset.prefetch_related("schedules", Prefetch(
+            "schedules__sections",
+            queryset=Section.objects.all().select_related('course')
+        ))
 
 
 class RequestDataSerializer(serializers.ModelSerializer):
