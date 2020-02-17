@@ -1,14 +1,13 @@
 from django.shortcuts import render
-from rest_framework import viewsets, mixins, generics, permissions, status
+from rest_framework import viewsets, mixins, generics, permissions, status, views
 from django.contrib.auth import get_user_model
 from .permissions import UserOwnerOnly
 from .serializers import UserSerializer
-from .jwt_email_verification import (JWTEmailVerificationAuthentication,
-                                     EmailVerificationToken,
-                                     AlreadyVerified,
-                                     NoEmailSet)
+from custom_jwt.authentication import JWTEmailVerificationAuthentication
+from custom_jwt.tokens import EmailVerificationToken
 from rest_framework.response import Response
 from django.core.mail import send_mail
+from django.utils.timezone import now
 
 
 class UserView(viewsets.GenericViewSet,
@@ -30,11 +29,10 @@ class EmailVerificationView(generics.GenericAPIView):
     def post(self, request, *args, **kwargs):
 
         user = request.user
-        email = request.auth["email"]
 
-        email_field_name = get_user_model().get_email_field_name()
-        setattr(user, email_field_name, email)
         user.email_verified = True
+        user.invalidate_token_before = now()
+        user.save()
 
         serializer = self.get_serializer(user)
 
@@ -52,11 +50,6 @@ class EmailSendTokenView(generics.GenericAPIView):
         email_field_name = get_user_model().get_email_field_name()
         email = getattr(user, email_field_name)
 
-        if user.email_verified:
-            raise AlreadyVerified()
-        if not email:
-            raise NoEmailSet()
-
         token = EmailVerificationToken.for_user(user)
         send_mail(
             'Trojan Scheduler Email Verification',
@@ -69,3 +62,18 @@ class EmailSendTokenView(generics.GenericAPIView):
         serializer = self.get_serializer(user)
 
         return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+class TokenInvalidateView(views.APIView):
+    permission_classes = (permissions.IsAuthenticated,)
+
+    def post(self, request, *args, **kwargs):
+
+        user = request.user
+
+        current_time = now()
+
+        user.invalidate_token_before = current_time
+        user.save()
+
+        return Response({"now": current_time}, status=status.HTTP_200_OK)

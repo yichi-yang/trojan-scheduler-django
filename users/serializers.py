@@ -2,6 +2,7 @@ from rest_framework import serializers
 from django.contrib.auth import get_user_model
 from rest_framework.exceptions import AuthenticationFailed
 from django.utils.translation import gettext_lazy as _
+from django.utils.timezone import now
 
 
 # https://stackoverflow.com/questions/16857450/how-to-register-users-in-django-rest-framework
@@ -18,18 +19,29 @@ class UserSerializer(serializers.ModelSerializer):
 
     def update(self, instance, validated_data):
 
+        account_change = False
+
         if "password" in validated_data:
             old_password = validated_data.pop("old_password", None)
             if old_password is None:
-                raise AuthenticationFailed(_("Old password needed for password reset"), "no_old_password")
+                raise AuthenticationFailed(
+                    _("Old password needed for password reset"), "no_old_password")
             if not instance.check_password(old_password):
-                raise AuthenticationFailed(_("Old password does not match username"), "wrong_old_password")
+                raise AuthenticationFailed(
+                    _("Old password does not match username"), "wrong_old_password")
             password = validated_data.pop("password")
             instance.set_password(password)
+            account_change = True
+
+        if "username" in validated_data and validated_data["username"] != instance.username:
+            account_change = True
 
         email_field_name = self.Meta.model.get_email_field_name()
         if email_field_name in validated_data and validated_data[email_field_name] != getattr(instance, email_field_name):
             validated_data["email_verified"] = False
+
+        if account_change:
+            validated_data["invalidate_token_before"] = now()
 
         return super().update(instance, validated_data)
 

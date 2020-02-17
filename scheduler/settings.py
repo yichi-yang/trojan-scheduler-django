@@ -43,6 +43,7 @@ INSTALLED_APPS = [
     'courses',
     'schedules',
     'users',
+    'custom_jwt'
 ]
 
 MIDDLEWARE = [
@@ -77,7 +78,7 @@ WSGI_APPLICATION = 'scheduler.wsgi.application'
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
-        'rest_framework_simplejwt.authentication.JWTAuthentication',
+        'custom_jwt.authentication.IatJWTAuthentication',
     ),
     'DEFAULT_PAGINATION_CLASS': 'scheduler.pagination.PageNumberPaginationWithCount',
     'PAGE_SIZE': 20,
@@ -180,6 +181,7 @@ LOGGING = {
 SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': timedelta(minutes=10),
     'REFRESH_TOKEN_LIFETIME': timedelta(hours=1),
+    'AUTH_TOKEN_CLASSES': ('custom_jwt.tokens.IatAccessToken',),
 }
 
 # email verification token life time
