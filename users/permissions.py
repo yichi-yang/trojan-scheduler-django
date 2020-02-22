@@ -2,7 +2,7 @@ from rest_framework.permissions import BasePermission, SAFE_METHODS
 from django.contrib.auth import get_user_model
 
 
-class UserOwnerOnly(BasePermission):
+class UserOwnerEditOnly(BasePermission):
 
     def has_object_permission(self, request, view, obj):
 
@@ -11,4 +11,4 @@ class UserOwnerOnly(BasePermission):
             (type(obj))
         )
 
-        return obj == request.user
+        return request.method in SAFE_METHODS or obj == request.user

@@ -4,13 +4,37 @@ from rest_framework.exceptions import AuthenticationFailed
 from django.utils.translation import gettext_lazy as _
 from django.utils.timezone import now
 
+User = get_user_model()
 
 # https://stackoverflow.com/questions/16857450/how-to-register-users-in-django-rest-framework
+
 
 class UserSerializer(serializers.ModelSerializer):
 
     password = serializers.CharField(write_only=True)
-    old_password = serializers.CharField(write_only=True)
+    old_password = serializers.CharField(write_only=True, required=False)
+    display_name = serializers.SerializerMethodField()
+
+    class Meta:
+        model = User
+        fields = ("id", "username", "password", "old_password", "first_name",
+                  "last_name", "email", "date_joined", "avatar", "email_verified",
+                  "display_name_choice", "show_name", "show_email", "show_date_joined", "display_name")
+        read_only_fields = ["id", "date_joined",
+                            "email_verified", "display_name"]
+
+    def get_display_name(self, obj):
+        if obj.display_name_choice == User.USERNAME:
+            return obj.username
+        if obj.display_name_choice == User.FIRSTNAME:
+            return obj.first_name
+        if obj.display_name_choice == User.LASTNAME:
+            return obj.last_name
+        if obj.display_name_choice == User.FULLNAME:
+            return obj.first_name + " " + obj.last_name
+        if obj.display_name_choice == User.NICKNAME:
+            return obj.nickname
+        return obj.username
 
     def create(self, validated_data):
 
@@ -45,9 +69,43 @@ class UserSerializer(serializers.ModelSerializer):
 
         return super().update(instance, validated_data)
 
-    class Meta:
-        model = get_user_model()
-        # Tuple of serialized model fields (see link [2])
-        fields = ("id", "username", "password", "old_password", "first_name",
-                  "last_name", "email", "date_joined", "avatar", "email_verified")
-        read_only_fields = ["date_joined", "email_verified"]
+    def validate(self, data):
+        if 'display_name_choice' in data:
+            if data['display_name_choice'] == User.FIRSTNAME and not data.get('first_name'):
+                raise serializers.ValidationError(
+                    "cannot use empty first_name as display name")
+            if data['display_name_choice'] == User.LASTNAME and not data.get('last_name'):
+                raise serializers.ValidationError(
+                    "cannot use empty last_name as display name")
+            if data['display_name_choice'] == User.FULLNAME and not (data.get('first_name') and data.get('last_name')):
+                raise serializers.ValidationError(
+                    "cannot use full name as display name when either first_name or last_name is empty")
+            if data['display_name_choice'] == User.NICKNAME and data.get('last_name'):
+                raise serializers.ValidationError(
+                    "cannot use empty nickname as display name")
+        return data
+
+    def to_representation(self, obj):
+        # get the original representation
+        representation = super().to_representation(obj)
+
+        # check if request user is owner of the user object
+        request = self.context.get('request', None)
+        user = request.user if request else None
+        is_owner = user and user.is_authenticated and user.pk == obj.pk
+
+        # if not owner, filter representation based on user settings
+        if not is_owner:
+            allowed_fields = ["id", "display_name", "avatar"]
+            if obj.show_name:
+                allowed_fields.extend(("first_name", "last_name"))
+            if obj.show_email and obj.email_verified:
+                allowed_fields.append(User.get_email_field_name())
+            if obj.show_date_joined:
+                allowed_fields.append("date_joined")
+
+            representation = {k: v for(k, v)in representation.items()
+                              if k in allowed_fields}
+
+        # return the modified representation
+        return representation

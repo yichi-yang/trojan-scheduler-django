@@ -5,10 +5,12 @@ from .models import User
 
 class CustomUserAdmin(UserAdmin):
     fieldsets = UserAdmin.fieldsets + (
-        ("Misc", {'fields': ('avatar', 'email_verified', 'invalidate_token_before')}),
+        ("Additional Info", {'fields': ('avatar', 'email_verified', 'invalidate_token_before',
+                                        'nickname', 'display_name_choice', 'show_name', 'show_email', 'show_date_joined')}),
     )
     add_fieldsets = UserAdmin.add_fieldsets + (
-        ("Misc", {'fields': ('avatar',)}),
+        ("Additional Info", {'fields': ('avatar', 'nickname', 'display_name_choice',
+                                        'show_name', 'show_email', 'show_date_joined')}),
     )
 
 

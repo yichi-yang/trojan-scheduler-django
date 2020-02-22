@@ -43,7 +43,8 @@ class Task(models.Model):
     )
     request_data = models.OneToOneField(
         RequestData, related_name="task", on_delete=models.PROTECT)
-    name = models.CharField(max_length=100, null=True, default=None)
+    name = models.CharField(max_length=100, blank=True, default="")
+    description = models.CharField(max_length=500, blank=True, default="")
     message = models.CharField(max_length=200, null=True, default=None)
     count = models.PositiveIntegerField(default=0)
 
@@ -63,4 +64,5 @@ class Schedule(models.Model):
     public = models.BooleanField(default=False)
     sections = models.ManyToManyField(Section)
     name = models.CharField(max_length=100, blank=True, default="")
+    description = models.CharField(max_length=500, blank=True, default="")
     saved = models.BooleanField(default=False)

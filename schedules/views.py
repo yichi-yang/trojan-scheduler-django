@@ -28,22 +28,22 @@ class TaskView(viewsets.GenericViewSet, mixins.ListModelMixin, mixins.RetrieveMo
 
     def create(self, request, *args, **kwargs):
 
-        request_data = {'coursebin': request.data.get(
-            'coursebin', None), 'preference': request.data.get('preference', None)}
+        request_data = {'coursebin': request.data.pop(
+            'coursebin', None), 'preference': request.data.pop('preference', None)}
 
         rd_serialier = RequestDataSerializer(data=request_data)
         rd_serialier.is_valid(raise_exception=True)
         request_data_instance = rd_serialier.save()
 
         task_data = {
-            "status": Task.PENDING,
             "user": request.user.pk if request.user.is_authenticated else None,
-            "request_data": request_data_instance.pk
+            "request_data": request_data_instance.pk,
+            **request.data
         }
 
         serializer = self.get_serializer(data=task_data)
         serializer.is_valid(raise_exception=True)
-        task_instance = serializer.save()
+        task_instance = serializer.save(status=Task.PENDING)
 
         generate_schedule.delay(request_data['coursebin'],
                                 request_data['preference'],

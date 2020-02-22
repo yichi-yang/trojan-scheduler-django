@@ -1,8 +1,6 @@
 from django.core.exceptions import ValidationError
 from django.utils.translation import gettext_lazy as _
 
-# Create your models here.
-
 
 def coursebin_validator(section_list):
     if not section_list:

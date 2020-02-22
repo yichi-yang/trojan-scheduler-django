@@ -1,7 +1,7 @@
 from django.shortcuts import render
 from rest_framework import viewsets, mixins, generics, permissions, status, views
 from django.contrib.auth import get_user_model
-from .permissions import UserOwnerOnly
+from .permissions import UserOwnerEditOnly
 from .serializers import UserSerializer
 from custom_jwt.authentication import JWTEmailVerificationAuthentication
 from custom_jwt.tokens import EmailVerificationToken
@@ -16,7 +16,7 @@ class UserView(viewsets.GenericViewSet,
                mixins.DestroyModelMixin,
                mixins.UpdateModelMixin):
 
-    permission_classes = (UserOwnerOnly,)
+    permission_classes = (UserOwnerEditOnly,)
     queryset = get_user_model().objects.all()
     serializer_class = UserSerializer
 
