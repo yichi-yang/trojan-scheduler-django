@@ -3,13 +3,42 @@ from django.contrib.postgres.fields import ArrayField, JSONField
 from django.conf import settings
 from courses.models import Section
 from .validators import coursebin_validator, preference_validator
+from copy import deepcopy
 
 # Create your models here.
 
 
+def createDefaultPreference():
+    return deepcopy({
+        "early_time": "10:00",
+        "early_weight": 75,
+        "late_time": "15:00",
+        "late_weight": 25,
+        "break_time": "00:10",
+        "break_weight": 50,
+        "reserved": [
+            {
+                "key": "#default0",
+                "from": "11:30",
+                "to": "12:30",
+                "wiggle": "01:00",
+                "weight": 50
+            },
+            {
+                "key": "#default1",
+                "from": "17:30",
+                "to": "18:30",
+                "wiggle": "01:00",
+                "weight": 50
+            }
+        ]
+    })
+
+
 class RequestData(models.Model):
-    coursebin = JSONField(validators=[coursebin_validator, ])
-    preference = JSONField(validators=[preference_validator, ])
+    coursebin = JSONField(validators=[coursebin_validator, ], default=list)
+    preference = JSONField(
+        validators=[preference_validator, ], default=createDefaultPreference)
 
 
 class Task(models.Model):
@@ -64,5 +93,5 @@ class Schedule(models.Model):
     public = models.BooleanField(default=False)
     sections = models.ManyToManyField(Section)
     name = models.CharField(max_length=100, blank=True, default="")
-    description = models.CharField(max_length=500, blank=True, default="")
+    description = models.CharField(max_length=200, blank=True, default="")
     saved = models.BooleanField(default=False)

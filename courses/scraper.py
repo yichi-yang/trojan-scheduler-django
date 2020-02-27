@@ -11,7 +11,7 @@ import logging
 logger = logging.getLogger(__name__)
 
 
-def make_section_dict(section_id, section_type, registered, instructor, location, time, days, order_fetched):
+def make_section_dict(section_id, section_type, registered, instructor, location, time, days, closed, order_fetched):
 
     section = {}
 
@@ -21,6 +21,7 @@ def make_section_dict(section_id, section_type, registered, instructor, location
     section['registered'] = registered
     section['instructor'] = instructor
     section['location'] = location
+    section['closed'] = closed
     section['order_fetched'] = order_fetched
 
     match = re.compile(r'(\d+):(\d+)-(\d+):(\d+)(am|pm)').match(time)
@@ -106,9 +107,11 @@ def fetch_class(term, course_name):
             registered = section_tr.find("td", class_="registered").get_text()
             instructor = section_tr.find("td", class_="instructor").get_text()
             location = section_tr.find("td", class_="location").get_text()
+            closed = section_tr.find("div", class_="closed") is not None
 
-            section = make_section_dict(
-                section_id, section_type, registered, instructor, location, time, days, len(course['sections']))
+            section = make_section_dict(section_id, section_type, registered,
+                                        instructor, location, time, days,
+                                        closed, len(course['sections']))
 
             course['sections'].append(section)
 

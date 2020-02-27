@@ -3,8 +3,8 @@ from django.utils.translation import gettext_lazy as _
 
 
 def coursebin_validator(section_list):
-    if not section_list:
-        raise ValidationError("coursebin cannot be an empty list")
+    if not isinstance(section_list, list):
+        raise ValidationError("coursebin must be a list")
 
     for node in section_list:
         node_type = node.get("type")
@@ -51,13 +51,13 @@ def preference_validator(preference):
 
     reserved = preference.get("reserved")
 
-    if not early_weight or not (isinstance(early_weight, int) or isinstance(early_weight, float)):
+    if not (isinstance(early_weight, int) or isinstance(early_weight, float)):
         raise ValidationError("invalid early_weight")
 
-    if not late_weight or not (isinstance(late_weight, int) or isinstance(late_weight, float)):
+    if not (isinstance(late_weight, int) or isinstance(late_weight, float)):
         raise ValidationError("invalid late_weight")
 
-    if not break_weight or not (isinstance(break_weight, int) or isinstance(break_weight, float)):
+    if not (isinstance(break_weight, int) or isinstance(break_weight, float)):
         raise ValidationError("invalid break_weight")
 
     if not isinstance(reserved, list):

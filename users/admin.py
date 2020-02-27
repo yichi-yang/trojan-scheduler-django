@@ -6,11 +6,11 @@ from .models import User
 class CustomUserAdmin(UserAdmin):
     fieldsets = UserAdmin.fieldsets + (
         ("Additional Info", {'fields': ('avatar', 'email_verified', 'invalidate_token_before',
-                                        'nickname', 'display_name_choice', 'show_name', 'show_email', 'show_date_joined')}),
+                                        'nickname', 'display_name_choice', 'show_name', 'show_email', 'show_date_joined', 'saved_task_data')}),
     )
     add_fieldsets = UserAdmin.add_fieldsets + (
         ("Additional Info", {'fields': ('avatar', 'nickname', 'display_name_choice',
-                                        'show_name', 'show_email', 'show_date_joined')}),
+                                        'show_name', 'show_email', 'show_date_joined', 'saved_task_data')}),
     )
 
 

@@ -7,7 +7,7 @@ class SectionSerializer(serializers.ModelSerializer):
     class Meta:
         model = Section
         fields = ('id', 'section_id', 'section_type', 'need_clearance', 'registered', 'instructor',
-                  'location', 'start', 'end', 'days', 'order_fetched')
+                  'location', 'start', 'end', 'days', 'closed', 'order_fetched')
         extra_kwargs = {'order_fetched': {'write_only': True}}
 
     @classmethod
@@ -22,8 +22,6 @@ class SectionNotUniqueSerializer(SectionSerializer):
                         **SectionSerializer.Meta.extra_kwargs}
 
 
-
-
 class SectionDetailSerializer(SectionSerializer):
 
     course_name = serializers.CharField(source='course.name', read_only=True)
@@ -34,7 +32,7 @@ class SectionDetailSerializer(SectionSerializer):
     class Meta(SectionSerializer.Meta):
         fields = ('course_name', 'term', 'updated',
                   *SectionSerializer.Meta.fields)
-    
+
     @classmethod
     def eager_load(cls, queryset):
         return queryset.select_related("course")

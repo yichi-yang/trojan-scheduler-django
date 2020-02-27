@@ -35,11 +35,13 @@ class Section(models.Model):
     end = models.TimeField(blank=True, null=True)
     days = ArrayField(models.PositiveSmallIntegerField(),
                       size=7, validators=[validate_days_array, ], blank=True)
+    closed = models.BooleanField(default=False)
     order_fetched = models.PositiveSmallIntegerField()
 
     def validate_unique(self, exclude=None):
         if Section.objects.exclude(id=self.id).filter(section_id=self.section_id, course__term=self.course.term).exists():
-            raise ValidationError("Section must have unique(course.term, section_id)")
+            raise ValidationError(
+                "Section must have unique(course.term, section_id)")
         super(Section, self).validate_unique(exclude)
 
     def __str__(self):

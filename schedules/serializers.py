@@ -14,7 +14,7 @@ class ScheduleSerializer(serializers.ModelSerializer):
     class Meta:
         model = Schedule
         fields = ('id', 'name', 'description', 'early_score', 'late_score', 'break_score',
-                  'reserved_score', 'total_score', 'task', 'created', 'public', 'user')
+                  'reserved_score', 'total_score', 'task', 'created', 'public', 'user', 'saved')
         read_only_fields = ('id', 'early_score', 'late_score', 'break_score',
                             'reserved_score', 'total_score', 'task')
 
@@ -44,8 +44,8 @@ class TaskSerializer(serializers.ModelSerializer):
         model = Task
         fields = ('id', 'name', 'description', 'created', 'user',
                   'status', 'request_data', 'message', 'count')
-        read_only_fields = ('id',  'created', 'user',
-                            'status',  'message', 'count')
+        read_only_fields = ('id',  'created', 'user', 'status',
+                            'request_data', 'message', 'count')
 
     @classmethod
     def eager_load(cls, queryset):

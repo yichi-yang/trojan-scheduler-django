@@ -3,8 +3,27 @@ from django.contrib.auth import get_user_model
 from rest_framework.exceptions import AuthenticationFailed
 from django.utils.translation import gettext_lazy as _
 from django.utils.timezone import now
+from .models import RequestData
+from django.contrib.auth.password_validation import validate_password
+from django.core.exceptions import ValidationError as DjangoValidationError
+from schedules.serializers import RequestDataSerializer
 
 User = get_user_model()
+
+
+def transform_exceptions(exception):
+    if isinstance(exception, DjangoValidationError):
+        if hasattr(exception, 'message_dict'):
+            detail = exception.message_dict
+        elif hasattr(exception, 'message'):
+            detail = exception.message
+        elif hasattr(exception, 'messages'):
+            detail = exception.messages
+        else:
+            detail = str(exception)
+        exception = serializers.ValidationError(detail=detail)
+    return exception
+
 
 # https://stackoverflow.com/questions/16857450/how-to-register-users-in-django-rest-framework
 
@@ -19,9 +38,10 @@ class UserSerializer(serializers.ModelSerializer):
         model = User
         fields = ("id", "username", "password", "old_password", "first_name",
                   "last_name", "email", "date_joined", "avatar", "email_verified",
-                  "display_name_choice", "show_name", "show_email", "show_date_joined", "display_name")
+                  "display_name_choice", "show_name", "show_email", "show_date_joined",
+                  "display_name", "saved_task_data")
         read_only_fields = ["id", "date_joined",
-                            "email_verified", "display_name"]
+                            "email_verified", "display_name", "saved_task_data"]
 
     def get_display_name(self, obj):
         if obj.display_name_choice == User.USERNAME:
@@ -37,8 +57,13 @@ class UserSerializer(serializers.ModelSerializer):
         return obj.username
 
     def create(self, validated_data):
-
-        user = self.Meta.model.objects.create_user(**validated_data)
+        try:
+            validate_password(validated_data["password"])
+        except DjangoValidationError as dve:
+            raise transform_exceptions(dve)
+        saved_task_data = RequestData.objects.create()
+        user = self.Meta.model.objects.create_user(
+            **validated_data, saved_task_data=saved_task_data)
         return user
 
     def update(self, instance, validated_data):
@@ -54,11 +79,22 @@ class UserSerializer(serializers.ModelSerializer):
                 raise AuthenticationFailed(
                     _("Old password does not match username"), "wrong_old_password")
             password = validated_data.pop("password")
+            try:
+                validate_password(password)
+            except DjangoValidationError as dve:
+                raise transform_exceptions(dve)
             instance.set_password(password)
             account_change = True
 
         if "username" in validated_data and validated_data["username"] != instance.username:
             account_change = True
+
+        if "saved_task_data" in validated_data:
+            task_data = validated_data.pop("saved_task_data", None)
+            task_data_serializer = RequestDataSerializer(
+                instance.saved_task_data, task_data)
+            task_data_serializer.is_valid(raise_exception=True)
+            task_data_serializer.save()
 
         email_field_name = self.Meta.model.get_email_field_name()
         if email_field_name in validated_data and validated_data[email_field_name] != getattr(instance, email_field_name):
@@ -80,7 +116,7 @@ class UserSerializer(serializers.ModelSerializer):
             if data['display_name_choice'] == User.FULLNAME and not (data.get('first_name') and data.get('last_name')):
                 raise serializers.ValidationError(
                     "cannot use full name as display name when either first_name or last_name is empty")
-            if data['display_name_choice'] == User.NICKNAME and data.get('last_name'):
+            if data['display_name_choice'] == User.NICKNAME and data.get('nickname'):
                 raise serializers.ValidationError(
                     "cannot use empty nickname as display name")
         return data

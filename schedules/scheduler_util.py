@@ -245,18 +245,19 @@ def part_list_from_coursebin(coursebin):
     groups = OrderedDict()
 
     # for all courses
-    for course in filter(lambda node: node.get("type") == "course", coursebin):
+    for course in filter(lambda node: node.get("type") == "course" and not node.get("exclude"), coursebin):
 
         part_list = []
         # for all parts
-        for part in filter(lambda node: node.get("parent") == course["node_id"], coursebin):
+        for part in filter(lambda node: node.get("parent") == course["node_id"] and not node.get("exclude"), coursebin):
 
             component_list = []
             # for all components
-            for component in filter(lambda node: node.get("parent") == part["node_id"], coursebin):
+            for component in filter(lambda node: node.get("parent") == part["node_id"] and not node.get("exclude"), coursebin):
                 section_list = [node
                                 for node in coursebin
-                                if node.get("parent") == component["node_id"]]
+                                if node.get("parent") == component["node_id"]
+                                and not node.get("exclude")]
                 component_list.append(section_list)
             part_list.append(component_list)
 

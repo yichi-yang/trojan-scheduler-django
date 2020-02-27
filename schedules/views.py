@@ -8,7 +8,7 @@ from rest_framework.response import Response
 from django.db.models import Prefetch
 from courses.models import Section
 from .tasks import generate_schedule
-from .permissions import TaskOwnerOnly, ScheduleOwnerOnly
+from .permissions import TaskOwnerOnly, ScheduleOwnerOnly, RequestDataOwnerOnly
 
 # Create your views here.
 
@@ -36,14 +36,14 @@ class TaskView(viewsets.GenericViewSet, mixins.ListModelMixin, mixins.RetrieveMo
         request_data_instance = rd_serialier.save()
 
         task_data = {
-            "user": request.user.pk if request.user.is_authenticated else None,
-            "request_data": request_data_instance.pk,
-            **request.data
+            "user": request.user if request.user.is_authenticated else None,
+            "request_data": request_data_instance,
+            "status": Task.PENDING
         }
 
-        serializer = self.get_serializer(data=task_data)
+        serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        task_instance = serializer.save(status=Task.PENDING)
+        task_instance = serializer.save(**task_data)
 
         generate_schedule.delay(request_data['coursebin'],
                                 request_data['preference'],
@@ -88,3 +88,4 @@ class ScheduleView(viewsets.ModelViewSet):
 class RequestDataView(viewsets.ModelViewSet):
     queryset = RequestData.objects.all()
     serializer_class = RequestDataSerializer
+    permission_classes = [RequestDataOwnerOnly]

@@ -5,6 +5,9 @@ from django.utils.timezone import now
 from django.contrib.auth.validators import UnicodeUsernameValidator
 from datetime import timedelta
 from django.core.exceptions import ValidationError
+from schedules.models import RequestData
+from django.db.models import Q
+from .models import RequestData
 
 
 def five_seconds_ago():
@@ -12,7 +15,9 @@ def five_seconds_ago():
 
 
 def nicknameUniqueValidator(nickname):
-    if User.objects.all().filter(username=nickname).exists():
+    if not nickname:
+        return
+    if User.objects.all().filter(Q(username=nickname) | Q(nickname=nickname)).exists():
         raise ValidationError("A user with that username already exists.")
 
 
@@ -37,8 +42,7 @@ class User(AbstractUser):
     ]
 
     nickname = models.CharField(max_length=150,
-                                null=True,
-                                unique=True,
+                                blank=True,
                                 validators=(UnicodeUsernameValidator, nicknameUniqueValidator))
     display_name_choice = models.CharField(max_length=2,
                                            choices=DISPLAY_NAME_CHOICES,
@@ -46,3 +50,6 @@ class User(AbstractUser):
     show_name = models.BooleanField(default=False)
     show_email = models.BooleanField(default=False)
     show_date_joined = models.BooleanField(default=False)
+    saved_task_data = models.OneToOneField(RequestData,
+                                           on_delete=models.PROTECT,
+                                           related_name="owner")
