@@ -4,7 +4,6 @@ import bisect
 import heapq
 from datetime import datetime, time, timedelta
 from .models import Schedule
-from datetime import datetime
 
 
 class SchedulerException(Exception):
@@ -49,13 +48,27 @@ class TimeFormatException(SchedulerException):
         return self.exception.__str__()
 
 
-def parse_time(str, pattern):
+def str_time2timedelta(str):
     try:
-        result = datetime.combine(datetime.min, datetime.strptime(
-            str, pattern).time()) - datetime.min
+        result = datetime.combine(datetime.min,
+                                  time.fromisoformat(str)) - datetime.min
     except ValueError as e:
         raise TimeFormatException(e) from e
     return result
+
+
+class Section:
+
+    def __init__(self, section_dict):
+        super().__init__()
+        start = section_dict.get("start")
+        end = section_dict.get("end")
+        self.start = str_time2timedelta(start) if start is not None else None
+        self.end = str_time2timedelta(end) if end is not None else None
+        self.days = section_dict.get("days")
+        self.id = section_dict.get("id")
+        self.exclude = section_dict.get("exclude")
+        self.exempt = section_dict.get("exempt")
 
 
 class Timetable:
@@ -86,12 +99,12 @@ class Timetable:
 
 class TimeSlot:
     def __init__(self, start, end, wiggle, weight):
-        self.start = start
-        self.end = end
-        self.wiggle = wiggle
+        self.start = str_time2timedelta(start)
+        self.end = str_time2timedelta(end)
+        self.wiggle = str_time2timedelta(wiggle)
         self.weight = weight
         self.lower = self.start - self.wiggle
-        self.upper = self.end + wiggle
+        self.upper = self.end + self.wiggle
         self.length = self.end - self.start
 
     def fits_in(self, break_start, break_end):
@@ -133,55 +146,49 @@ class Evaluator:
     def __init__(self, preference, max_size):
         self.schedules = []
         self.max_size = max_size
-        self.preference = preference
         self.count = 0
+
+        self.early_time = str_time2timedelta(preference["early_time"])
+        self.late_time = str_time2timedelta(preference["late_time"])
+        self.break_time = str_time2timedelta(preference["break_time"])
+        self.early_weight = preference["early_weight"]
+        self.late_weight = preference["late_weight"]
+        self.break_weight = preference["break_weight"]
+
+        def parse_reserved(slot): return TimeSlot(slot["from"], slot["to"],
+                                                  slot["wiggle"], slot["weight"])
+
+        self.reserved_slots = list(map(parse_reserved, preference["reserved"]))
 
     def __call__(self, sections):
 
-        early_time = parse_time(
-            self.preference["early_time"], "%H:%M")
-        late_time = parse_time(
-            self.preference["late_time"], "%H:%M")
-        break_time = parse_time(
-            self.preference["break_time"], "%H:%M")
-        early_weight = self.preference["early_weight"]
-        late_weight = self.preference["late_weight"]
-        break_weight = self.preference["break_weight"]
-
         def early_evaluator(time):
-            if time >= early_time:
+            if time >= self.early_time:
                 return 0
             else:
-                return (early_time - time).total_seconds() * early_weight / 2000
+                return (self.early_time - time).total_seconds() * self.early_weight / 2000
 
         def late_evaluator(time):
-            if time <= late_time:
+            if time <= self.late_time:
                 return 0
             else:
-                return (time - late_time).total_seconds() * late_weight / 2000
+                return (time - self.late_time).total_seconds() * self.late_weight / 2000
 
         def break_evaluator(time):
-            if time <= break_time:
+            if time <= self.break_time:
                 return 0
             else:
-                return (time - break_time).total_seconds() * break_weight / 2000
+                return (time - self.break_time).total_seconds() * self.break_weight / 2000
 
-        reserved_slots = []
-
-        for slot in self.preference["reserved"]:
-            reserved_slots.append(TimeSlot(parse_time(slot["from"], "%H:%M"),
-                                           parse_time(slot["to"], "%H:%M"),
-                                           parse_time(slot["wiggle"], "%H:%M"),
-                                           slot["weight"]))
+        reserved_slots = self.reserved_slots
 
         timetable = Timetable()
 
         for section in sections:
-            if section.get("exempt") or not section.get("start") or not section.get("end"):
+            if section.exempt or not section.start or not section.end:
                 continue
-            for day in section["days"]:
-                timetable.insert(day, parse_time(section["start"], "%H:%M:%S"),
-                                 parse_time(section["end"], "%H:%M:%S"))
+            for day in section.days:
+                timetable.insert(day, section.start, section.end)
 
         early_score = 0
         late_score = 0
@@ -223,7 +230,7 @@ class Evaluator:
             for slot in reserved_slots_copy:
                 reserved_score += slot.weight
 
-        schedule = ResultSchedule([section["id"] for section in sections],
+        schedule = ResultSchedule([section.id for section in sections],
                                   early_score, late_score, break_score, reserved_score)
 
         if len(self.schedules) < self.max_size:
@@ -244,20 +251,23 @@ class Evaluator:
 def part_list_from_coursebin(coursebin):
     groups = OrderedDict()
 
+    def create_filter(parent=None):
+        if parent is None:
+            return lambda node: node.get("type") == "course" and not node.get("exclude")
+        return lambda node: node.get("parent") == parent and not node.get("exclude")
+
     # for all courses
-    for course in filter(lambda node: node.get("type") == "course" and not node.get("exclude"), coursebin):
+    for course in filter(create_filter(), coursebin):
 
         part_list = []
         # for all parts
-        for part in filter(lambda node: node.get("parent") == course["node_id"] and not node.get("exclude"), coursebin):
+        for part in filter(create_filter(course["node_id"]), coursebin):
 
             component_list = []
             # for all components
-            for component in filter(lambda node: node.get("parent") == part["node_id"] and not node.get("exclude"), coursebin):
-                section_list = [node
-                                for node in coursebin
-                                if node.get("parent") == component["node_id"]
-                                and not node.get("exclude")]
+            for component in filter(create_filter(part["node_id"]), coursebin):
+                section_list = [Section(node) for node in coursebin
+                                if create_filter(component["node_id"])(node)]
                 component_list.append(section_list)
             part_list.append(component_list)
 
@@ -290,15 +300,14 @@ def dfs_search(components, index, selected, timetable, evaluator, terminate_at):
 
     for section in components[index]:
 
-        if section.get("exclude"):
+        if section.exclude:
             continue
 
         timetable_copy = timetable.clone()
         is_valid = True
-        if section["start"] and section["end"]:
-            for day in section["days"]:
-                if not timetable_copy.insert(day, parse_time(section["start"], "%H:%M:%S"),
-                                             parse_time(section["end"], "%H:%M:%S")):
+        if section.start and section.end:
+            for day in section.days:
+                if not timetable_copy.insert(day, section.start, section.end):
                     is_valid = False
                     continue
 
