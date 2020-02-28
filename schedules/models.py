@@ -2,7 +2,7 @@ from django.db import models
 from django.contrib.postgres.fields import ArrayField, JSONField
 from django.conf import settings
 from courses.models import Section
-from .validators import coursebin_validator, preference_validator
+from .validators import coursebin_validator, preference_validator, setting_validator
 from copy import deepcopy
 
 # Create your models here.
@@ -35,10 +35,24 @@ def createDefaultPreference():
     })
 
 
+def createDefaultSetting():
+    return deepcopy({
+        "course": "",
+        "term": settings.CURRENT_SEMESTER,
+        "toolsOpen": False,
+        "clearedSections": "",
+        "clearedOnly": False,
+        "excludeClosed": False,
+        "exemptedSections": ""
+    })
+
+
 class RequestData(models.Model):
     coursebin = JSONField(validators=[coursebin_validator, ], default=list)
     preference = JSONField(
         validators=[preference_validator, ], default=createDefaultPreference)
+    setting = JSONField(
+        validators=[setting_validator, ], default=createDefaultSetting)
 
 
 class Task(models.Model):

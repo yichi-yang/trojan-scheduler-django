@@ -72,4 +72,4 @@ class RequestDataSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = RequestData
-        fields = ('coursebin', 'preference')
+        fields = ('coursebin', 'preference', 'setting')

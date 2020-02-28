@@ -1,5 +1,6 @@
 from django.core.exceptions import ValidationError
 from django.utils.translation import gettext_lazy as _
+from datetime import time
 
 
 def coursebin_validator(section_list):
@@ -37,13 +38,34 @@ def coursebin_validator(section_list):
                 )
 
 
+def validate_time(time_str, field_name):
+    if not time_str:
+        raise ValidationError(_('%(field_name)s cannot be empty'),
+                              params={'field_name': field_name},)
+    try:
+        time.fromisoformat(time_str)
+    except ValueError:
+        raise ValidationError(_('%(value)s is not a valid time string'),
+                              params={'value': time_str},)
+
+
+def check_type(value, field_name, types):
+    if not isinstance(value, types):
+        raise ValidationError(_("invalid %(field)s %(value)s, expect %(types)s"),
+                              params={'field': field_name, 'value': value, 'types': types},)
+
+
 def preference_validator(preference):
     if not preference:
-        raise ValidationError("preference cannot be empty")
+        raise ValidationError(_("preference cannot be empty"))
 
     early_time = preference.get("early_time")
     late_time = preference.get("late_time")
     break_time = preference.get("break_time")
+
+    validate_time(early_time, "early_time")
+    validate_time(late_time, "late_time")
+    validate_time(break_time, "break_time")
 
     early_weight = preference.get("early_weight")
     late_weight = preference.get("late_weight")
@@ -51,17 +73,37 @@ def preference_validator(preference):
 
     reserved = preference.get("reserved")
 
-    if not (isinstance(early_weight, int) or isinstance(early_weight, float)):
-        raise ValidationError("invalid early_weight")
-
-    if not (isinstance(late_weight, int) or isinstance(late_weight, float)):
-        raise ValidationError("invalid late_weight")
-
-    if not (isinstance(break_weight, int) or isinstance(break_weight, float)):
-        raise ValidationError("invalid break_weight")
-
-    if not isinstance(reserved, list):
-        raise ValidationError("invalid reserved")
+    check_type(early_weight, "early_weight", (int, float))
+    check_type(late_weight, "late_weight", (int, float))
+    check_type(break_weight, "break_weight", (int, float))
+    check_type(reserved, "reserved", list)
 
     for slot in reserved:
-        pass
+        to_time = slot.get("to")
+        from_time = slot.get("from")
+        weight = slot.get("weight")
+        wiggle = slot.get("wiggle")
+
+        check_type(weight, "weight", (int, float))
+
+        validate_time(to_time, "to")
+        validate_time(from_time, "from")
+        validate_time(wiggle, "wiggle")
+
+
+def setting_validator(setting):
+    course = setting.get("course")
+    term = setting.get("term")
+    toolsOpen = setting.get("toolsOpen")
+    clearedSections = setting.get("clearedSections")
+    clearedOnly = setting.get("clearedOnly")
+    excludeClosed = setting.get("excludeClosed")
+    exemptedSections = setting.get("exemptedSections")
+
+    check_type(course, "course", str)
+    check_type(term, "term", str)
+    check_type(toolsOpen, "toolsOpen", bool)
+    check_type(clearedSections, "clearedSections", str)
+    check_type(clearedOnly, "clearedOnly", bool)
+    check_type(excludeClosed, "excludeClosed", bool)
+    check_type(exemptedSections, "exemptedSections", str)
