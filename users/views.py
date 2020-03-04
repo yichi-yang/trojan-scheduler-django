@@ -44,6 +44,7 @@ class EmailVerificationView(generics.GenericAPIView):
 class EmailSendTokenView(generics.GenericAPIView):
     permission_classes = (permissions.IsAuthenticated,)
     serializer_class = UserSerializer
+    throttle_scope = 'email'
 
     def post(self, request, *args, **kwargs):
 
@@ -93,6 +94,7 @@ class TokenInvalidateView(views.APIView):
 class PasswordForgetView(generics.GenericAPIView):
 
     serializer_class = EmailSerializer
+    throttle_scope = 'email'
 
     def post(self, request, *args, **kwargs):
 

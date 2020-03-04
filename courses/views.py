@@ -8,6 +8,7 @@ from rest_framework import status
 from .scraper import fetch_class
 from datetime import datetime, timezone
 from django.conf import settings
+from rest_framework.permissions import SAFE_METHODS
 
 # Create your views here.
 
@@ -32,6 +33,11 @@ class CourseView(viewsets.ModelViewSet):
         if instance is not None:
             self.check_object_permissions(self.request, instance)
         return instance
+
+    def get_throttles(self):
+        if self.action not in SAFE_METHODS:
+            self.throttle_scope = 'scraper'
+        return super().get_throttles()
 
     def update(self, request, *args, **kwargs):
         with transaction.atomic():

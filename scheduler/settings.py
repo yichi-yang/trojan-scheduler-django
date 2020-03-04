@@ -80,6 +80,17 @@ REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'custom_jwt.authentication.IatJWTAuthentication',
     ),
+    'DEFAULT_THROTTLE_CLASSES': [
+        'scheduler.throttles.BurstRateThrottle',
+        'scheduler.throttles.SustainedRateThrottle',
+        'rest_framework.throttling.ScopedRateThrottle',
+    ],
+    'DEFAULT_THROTTLE_RATES': {
+        'burst': '180/min',
+        'sustained': '24000/day',
+        'email': '10/day',
+        'scraper': '200/hour'
+    },
     'DEFAULT_PAGINATION_CLASS': 'scheduler.pagination.PageNumberPaginationWithCount',
     'PAGE_SIZE': 20,
 }
@@ -196,6 +207,7 @@ EMAIL_PORT = config('EMAIL_PORT', default=25, cast=int)
 EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD', default='')
 EMAIL_HOST_USER = config('EMAIL_HOST_USER', default='')
 EMAIL_USE_TLS = config('EMAIL_USE_TLS', default=False, cast=bool)
+EMAIL_USE_SSL = config('EMAIL_USE_SSL', default=False, cast=bool)
 
 # default semester in settings
 CURRENT_SEMESTER = "20201"
