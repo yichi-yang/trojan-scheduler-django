@@ -56,6 +56,7 @@ def generate_schedule(coursebin, preference, task_id, time_limit=None):
                 for result in results:
                     schedule_instance = Schedule(task=task_instance,
                                                  public=not task_instance.user,
+                                                 description=task_instance.description,
                                                  **result.toDict())
                     schedule_instance.save()
                     schedule_instance.sections.add(*result.sections)

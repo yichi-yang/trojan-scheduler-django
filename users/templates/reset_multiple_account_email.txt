@@ -1,0 +1,8 @@
+Dear Trojan Scheduler user,
+
+Someone has requested a password reset using this email address. However, there
+are more than one account associated with this email. Please remove this email address
+from other accounts before resetting the password.
+
+Best,
+Trojan Scheduler Team

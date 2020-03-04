@@ -123,6 +123,11 @@ class EmailVerificationToken(BlacklistMixin, IatToken):
     lifetime = settings.EMAIL_TOKEN_LIFETIME
 
 
+class PasswordResetToken(BlacklistMixin, IatToken):
+    token_type = 'reset'
+    lifetime = settings.RESET_TOKEN_LIFETIME
+
+
 class IatUntypedToken(IatToken):
     token_type = 'untyped'
     lifetime = timedelta(seconds=0)

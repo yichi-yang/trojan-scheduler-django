@@ -1,5 +1,5 @@
 from django.shortcuts import render
-from rest_framework import viewsets
+from rest_framework import viewsets, generics
 from rest_framework import mixins
 from .models import Task, Schedule, RequestData
 from .serializers import TaskSerializer, TaskDetailSerializer, RequestDataSerializer, ScheduleSerializer, ScheduleDetailedSerializer
@@ -9,12 +9,13 @@ from django.db.models import Prefetch
 from courses.models import Section
 from .tasks import generate_schedule
 from .permissions import TaskOwnerOnly, ScheduleOwnerOnly, RequestDataOwnerOnly
+from django.db import transaction
+from random import randint
 
 # Create your views here.
 
 
-class TaskView(viewsets.GenericViewSet, mixins.ListModelMixin, mixins.RetrieveModelMixin,
-               mixins.CreateModelMixin, mixins.DestroyModelMixin):
+class TaskView(viewsets.ModelViewSet):
 
     def get_queryset(self):
         user_pk = self.request.user.pk if self.request.user.is_authenticated else None
@@ -65,13 +66,16 @@ class ScheduleView(viewsets.ModelViewSet):
     def get_queryset(self):
         user_pk = self.request.user.pk if self.request.user.is_authenticated else None
         if self.action == 'list':
-            saved_para = self.request.query_params.get('saved', None)
-            saved_val = saved_para in ["", "True", "true"]
-            if saved_para is not None:
-                queryset = Schedule.objects.filter(
-                    task__user=user_pk, saved=saved_val)
-            else:
-                queryset = Schedule.objects.filter(task__user=user_pk)
+            query_para = {}
+            saved = self.request.query_params.get('saved')
+            if saved:
+                query_para["saved"] = saved in ["", "True", "true"]
+            public = self.request.query_params.get('public')
+            if public:
+                query_para["public"] = public in ["", "True", "true"]
+
+            queryset = Schedule.objects.filter(task__user=user_pk,
+                                               **query_para)
         else:
             queryset = Schedule.objects.all()
         return self.get_serializer_class().eager_load(queryset)
@@ -81,8 +85,17 @@ class ScheduleView(viewsets.ModelViewSet):
             return ScheduleSerializer
         return ScheduleDetailedSerializer
 
-    def get_loader(self):
-        return self.get_serializer_class().eager_load
+
+class RandomScheduleView(generics.RetrieveAPIView):
+
+    permission_classes = [ScheduleOwnerOnly]
+    serializer_class = ScheduleDetailedSerializer
+
+    @transaction.atomic
+    def get_object(self):
+        all = Schedule.objects.all().filter(public=True)
+        count = all.count()
+        return all[randint(0, count - 1)]
 
 
 class RequestDataView(viewsets.ModelViewSet):

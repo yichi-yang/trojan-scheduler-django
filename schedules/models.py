@@ -43,7 +43,9 @@ def createDefaultSetting():
         "clearedSections": "",
         "clearedOnly": False,
         "excludeClosed": False,
-        "exemptedSections": ""
+        "exemptedSections": "",
+        "savedOnly": True,
+        "publicOnly": False
     })
 
 

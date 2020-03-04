@@ -63,13 +63,15 @@ class CourseView(viewsets.ModelViewSet):
                     return Response(self.get_serializer(instance).data)
 
             # fetch course information from USC Schedule of Courses
-            course = fetch_class(term, name)
+            course, error = fetch_class(term, name)
+
+            fetch_status = {"blame_usc": bool(error), "fetch_status": error}
             # if fetch fails, return cached Course instance if possible
             if not course:
                 if instance:
                     return Response(self.get_serializer(instance).data)
                 else:
-                    return Response(status=status.HTTP_404_NOT_FOUND)
+                    return Response(fetch_status, status=status.HTTP_404_NOT_FOUND)
 
             # if fetched course's name does not match current instance,
             # select the new one to match
@@ -95,5 +97,6 @@ class SectionView(viewsets.ModelViewSet):
     lookup_field = 'section_id'
 
     def get_queryset(self):
-        queryset = Section.objects.all().filter(course__term=self.kwargs['term'])
+        queryset = Section.objects.all().filter(
+            course__term=self.kwargs['term'])
         return self.get_serializer_class().eager_load(queryset)

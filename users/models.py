@@ -6,7 +6,6 @@ from django.contrib.auth.validators import UnicodeUsernameValidator
 from datetime import timedelta
 from django.core.exceptions import ValidationError
 from schedules.models import RequestData
-from django.db.models import Q
 from .models import RequestData
 
 
@@ -17,7 +16,7 @@ def five_seconds_ago():
 def nicknameUniqueValidator(nickname):
     if not nickname:
         return
-    if User.objects.all().filter(Q(username=nickname) | Q(nickname=nickname)).exists():
+    if User.objects.all().filter(username=nickname).exists():
         raise ValidationError("A user with that username already exists.")
 
 
@@ -42,7 +41,10 @@ class User(AbstractUser):
     ]
 
     nickname = models.CharField(max_length=150,
+                                null=True,
                                 blank=True,
+                                unique=True,
+                                default="",
                                 validators=(UnicodeUsernameValidator, nicknameUniqueValidator))
     display_name_choice = models.CharField(max_length=2,
                                            choices=DISPLAY_NAME_CHOICES,

@@ -63,11 +63,11 @@ def fetch_class(term, course_name):
     except requests.exceptions.ConnectionError:
         logger.warning('{term} {course} | Connection error'.format(
             term=term, course=course_name))
-        return None
+        return None, "connection-error"
     except requests.exceptions.Timeout:
         logger.warning('{term} {course} | Timeout'.format(
             term=term, course=course_name))
-        return None
+        return None, "timeout"
 
     if response:
         soup = BeautifulSoup(response.text, "html.parser")
@@ -78,12 +78,12 @@ def fetch_class(term, course_name):
         if not section_trs:
             logger.info('{term} {course} | No sections found'.format(
                 term=term, course=course_name))
-            return None
+            return None, None
 
         if not section_url or not section_url.attrs.get('href'):
             logger.warning(
                 '{term} {course} | No section-url found'.format(term=term, course=course_name))
-            return None
+            return None, None
         match = re.compile(
             r'https:\/\/classes\.usc\.edu\/term-(\d+)\/section\/([a-zA-Z0-9-]+)\/').match(section_url.attrs.get('href'))
         if match:
@@ -95,7 +95,7 @@ def fetch_class(term, course_name):
         else:
             logger.warning(
                 '{term} {course} | No match in section-url'.format(term=term, course=course_name))
-            return None
+            return None, None
 
         course = {"term": real_term, "name": real_name, "sections": []}
 
@@ -115,8 +115,8 @@ def fetch_class(term, course_name):
 
             course['sections'].append(section)
 
-        return course
+        return course, None
     else:
         logger.warning('{term} {course} | No response'.format(
             term=term, course=course_name))
-        return None
+        return None, "no-response"

@@ -1,0 +1,10 @@
+Dear Trojan Scheduler user,
+
+Someone has requested a password reset using this email address. However, we couldn't find any associated account.
+You have to use the email address you registered Trojan Scheduler with to reset your password.
+Your can try another Email here:
+
+{{password_forget_url}}
+
+Best,
+Trojan Scheduler Team

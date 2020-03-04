@@ -1,0 +1,163 @@
+<html>
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+  <title>Email Verification</title>
+  <style type="text/css">
+    #template_body a {
+      color: #30c2a5;
+    }
+  </style>
+  <style type="text/css" id="custom-css">
+  </style>
+</head>
+
+<body leftmargin="0" marginwidth="0" topmargin="0" marginheight="0" offset="0">
+  <div id="body" style="
+	background-color:#e3e3e3;
+	width:100%;
+	-webkit-text-size-adjust:none !important;
+	margin:0;
+	padding: 70px 0 70px 0;
+">
+    <table border="0" cellpadding="0" cellspacing="0" height="100%" width="100%">
+      <tr>
+        <td align="center" valign="top">
+          <table border="0" cellpadding="0" cellspacing="0" id="template_container" style="
+	-webkit-box-shadow:0 0 0 3px rgba(0,0,0,0.025) !important;
+	box-shadow:0 0 0 3px rgba(0,0,0,0.025) !important;
+	-webkit-border-radius:6px !important;
+	border-radius:6px !important;
+	background-color: #fafafa;
+	border-radius:6px !important;
+	width: 100%;
+	max-width: 680px;">
+            <tr>
+              <td align="center" valign="top">
+                <!-- Header -->
+                <table border="0" cellpadding="0" cellspacing="0" width="100%" id="template_header" style="
+	background-color: #454545;
+	color: #f1f1f1;
+	-webkit-border-top-left-radius:6px !important;
+	-webkit-border-top-right-radius:6px !important;
+	border-top-left-radius:6px !important;
+	border-top-right-radius:6px !important;
+	border-bottom: 0;
+	font-family:Arial;
+	font-weight:bold;
+	line-height:100%;
+	vertical-align:middle;
+">
+                  <tr>
+                    <td>
+                      <h1 style="
+	color: #f1f1f1;
+	margin:0;
+	padding: 28px 24px;
+	display:block;
+	font-family:Arial;
+	font-size: 30px;
+	font-weight:bold;
+	text-align:center;
+	line-height: 150%;
+" id="logo">
+                        <a style="
+	color: #f1f1f1;
+	text-decoration: none;
+" href="https://www.yichiyang.com" title="An Email From Yichi">Email Verification | Trojan Scheduler</a>
+                      </h1>
+
+                    </td>
+                  </tr>
+                </table>
+                <!-- End Header -->
+              </td>
+            </tr>
+            <tr>
+              <td align="center" valign="top">
+                <!-- Body -->
+                <table border="0" cellpadding="0" cellspacing="0" width="100%" id="template_body">
+                  <tr>
+                    <td valign="top" style="
+	background-color: #fafafa;
+" id="mailtpl_body_bg">
+                      <!-- Content -->
+                      <table border="0" cellpadding="20" cellspacing="0" width="100%">
+                        <tr>
+                          <td valign="top">
+                            <div style="
+	color: #888;
+	font-family:Arial;
+	font-size: 14px;
+	line-height:150%;
+	text-align:left;
+" id="mailtpl_body">
+                              <p>Hi {{username}},</p>
+                              <p>To complete email verification, please click this button:</p>
+                              <table border="0" cellpadding="0" cellspacing="0"
+                                style="border-collapse: separate; mso-table-lspace: 0pt; mso-table-rspace: 0pt; width: auto;">
+                                <tbody>
+                                  <tr>
+                                    <td
+                                      style="font-family: sans-serif; font-size: 14px; vertical-align: top; background-color: #3498db; border-radius: 5px; text-align: center;">
+                                      <a href="{{email_verification_url}}" target="_blank"
+                                        style="display: inline-block; color: #ffffff; background-color: #3498db; border: solid 1px #3498db; border-radius: 5px; box-sizing: border-box; cursor: pointer; text-decoration: none; font-size: 14px; font-weight: bold; margin: 0; padding: 12px 25px; text-transform: capitalize; border-color: #3498db;">Verify
+                                        Email</a> </td>
+                                  </tr>
+                                </tbody>
+                              </table>
+                              <p>Or copy this link and paste it in your browser: <a href="{{email_verification_url}}"
+                                  target="_blank"
+                                  style="overflow-wrap:break-word;word-wrap:break-word;word-break:break-all;">{{email_verification_url}}</a>
+                              </p>
+
+                            </div>
+                          </td>
+                        </tr>
+                      </table>
+                      <!-- End Content -->
+                    </td>
+                  </tr>
+                </table>
+                <!-- End Body -->
+              </td>
+            </tr>
+            <tr>
+              <td align="center" valign="top">
+                <!-- Footer -->
+                <table border="0" cellpadding="10" cellspacing="0" width="100%" id="template_footer" style="
+	border-top:1px solid #E2E2E2;
+	background: #eee;
+	-webkit-border-radius:0px 0px 6px 6px;
+	-o-border-radius:0px 0px 6px 6px;
+	-moz-border-radius:0px 0px 6px 6px;
+	border-radius:0px 0px 6px 6px;
+">
+                  <tr>
+                    <td valign="top">
+                      <table border="0" cellpadding="10" cellspacing="0" width="100%">
+                        <tr>
+                          <td colspan="2" valign="middle" id="credit" style="
+	border:0;
+	color: #777;
+	font-family: Arial;
+	font-size: 12px;
+	line-height:125%;
+	text-align:center;
+">{{footer}}</td>
+                        </tr>
+                      </table>
+                    </td>
+                  </tr>
+                </table>
+                <!-- End Footer -->
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+  </div>
+</body>
+
+</html>

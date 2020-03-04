@@ -39,7 +39,7 @@ class UserSerializer(serializers.ModelSerializer):
         fields = ("id", "username", "password", "old_password", "first_name",
                   "last_name", "email", "date_joined", "avatar", "email_verified",
                   "display_name_choice", "show_name", "show_email", "show_date_joined",
-                  "display_name", "saved_task_data")
+                  "display_name", "saved_task_data", "nickname")
         read_only_fields = ["id", "date_joined",
                             "email_verified", "display_name", "saved_task_data"]
 
@@ -72,12 +72,14 @@ class UserSerializer(serializers.ModelSerializer):
 
         if "password" in validated_data:
             old_password = validated_data.pop("old_password", None)
-            if old_password is None:
-                raise AuthenticationFailed(
-                    _("Old password needed for password reset"), "no_old_password")
-            if not instance.check_password(old_password):
-                raise AuthenticationFailed(
-                    _("Old password does not match username"), "wrong_old_password")
+            reset_password = self.context.get("reset_password")
+            if not reset_password:
+                if old_password is None:
+                    raise AuthenticationFailed(
+                        _("Old password needed for password reset"), "no_old_password")
+                if not instance.check_password(old_password):
+                    raise AuthenticationFailed(
+                        _("Old password is incorrect"), "wrong_old_password")
             password = validated_data.pop("password")
             try:
                 validate_password(password)
@@ -119,6 +121,10 @@ class UserSerializer(serializers.ModelSerializer):
             if data['display_name_choice'] == User.NICKNAME and data.get('nickname'):
                 raise serializers.ValidationError(
                     "cannot use empty nickname as display name")
+        reset_password = self.context.get("reset_password")
+        if reset_password and not "password" in data:
+            raise serializers.ValidationError(
+                "password needed for password reset")
         return data
 
     def to_representation(self, obj):
@@ -134,7 +140,7 @@ class UserSerializer(serializers.ModelSerializer):
         if not is_owner:
             allowed_fields = ["id", "display_name", "avatar"]
             if obj.show_name:
-                allowed_fields.extend(("first_name", "last_name"))
+                allowed_fields.extend(("first_name", "last_name", "nickname"))
             if obj.show_email and obj.email_verified:
                 allowed_fields.append(User.get_email_field_name())
             if obj.show_date_joined:
@@ -145,3 +151,20 @@ class UserSerializer(serializers.ModelSerializer):
 
         # return the modified representation
         return representation
+
+    def to_internal_value(self, data):
+        if "nickname" in data and data["nickname"] is None:
+            data["nickname"] = ""
+        return super().to_internal_value(data)
+
+
+class UsernameSerializer(serializers.Serializer):
+    username = serializers.CharField()
+
+
+class EmailSerializer(serializers.Serializer):
+    email = serializers.EmailField()
+
+
+class PasswordSerializer(serializers.Serializer):
+    password = serializers.CharField()

@@ -1,0 +1,8 @@
+Hi {{username}},
+
+To complete email verification, please copy this link and paste it in your browser:
+
+{{email_verification_url}}
+
+Best,
+Trojan Scheduler Team

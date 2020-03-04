@@ -44,7 +44,7 @@ class RequestDataOwnerOnly(BasePermission):
         if hasattr(obj, 'owner') and obj.owner == request.user:
             return True
 
-        if hasattr(obj, 'task') and obj.task.user is None and obj.task.user == request.user:
+        if hasattr(obj, 'task') and obj.task.user is not None and obj.task.user == request.user:
             return True
 
         return False

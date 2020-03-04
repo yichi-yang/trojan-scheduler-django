@@ -1,0 +1,12 @@
+{% extends "email_template.html" %}
+
+{% block title %}Multiple Accounts Found | Trojan Scheduler{% endblock %}
+
+{% block email_title %}Multiple Accounts Found | Trojan Scheduler{% endblock %}
+
+{% block email_body %}
+<p>Dear Trojan Scheduler user,</p>
+<p>Someone has requested a password reset using this email address. However, there
+are more than one account associated with this email. Please remove this email address
+from other accounts before resetting the password.</p>
+{% endblock %}

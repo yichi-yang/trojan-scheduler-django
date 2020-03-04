@@ -10,11 +10,13 @@ class ScheduleSerializer(serializers.ModelSerializer):
     created = serializers.DateTimeField(source="task.created", read_only=True)
     user = serializers.PrimaryKeyRelatedField(
         source="task.user", read_only=True)
+    request_data = serializers.PrimaryKeyRelatedField(
+        source="task.request_data", read_only=True)
 
     class Meta:
         model = Schedule
         fields = ('id', 'name', 'description', 'early_score', 'late_score', 'break_score',
-                  'reserved_score', 'total_score', 'task', 'created', 'public', 'user', 'saved')
+                  'reserved_score', 'total_score', 'task', 'created', 'public', 'user', 'saved', 'request_data')
         read_only_fields = ('id', 'early_score', 'late_score', 'break_score',
                             'reserved_score', 'total_score', 'task')
 

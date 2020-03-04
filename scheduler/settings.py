@@ -146,7 +146,7 @@ STATIC_URL = '/static/'
 # USC Schedule of Class scraping settings
 
 USC_SOC_SCRAPER_URL = 'https://classes.usc.edu/term-{term}/classes/{course}'
-USC_SOC_SCRAPER_TIMEOUT = 30
+USC_SOC_SCRAPER_TIMEOUT = 10
 USC_SOC_CACHE_REFRESH = 5 * 60
 
 
@@ -180,13 +180,14 @@ LOGGING = {
 
 SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': timedelta(minutes=10),
-    'REFRESH_TOKEN_LIFETIME': timedelta(hours=1),
+    'REFRESH_TOKEN_LIFETIME': timedelta(hours=8),
     'AUTH_TOKEN_CLASSES': ('custom_jwt.tokens.IatAccessToken',),
 }
 
 # email verification token life time
 
-EMAIL_TOKEN_LIFETIME = timedelta(hours=1)
+EMAIL_TOKEN_LIFETIME = timedelta(hours=24)
+RESET_TOKEN_LIFETIME = timedelta(hours=24)
 
 # SMTP settings
 EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
@@ -196,5 +197,7 @@ EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD', default='')
 EMAIL_HOST_USER = config('EMAIL_HOST_USER', default='')
 EMAIL_USE_TLS = config('EMAIL_USE_TLS', default=False, cast=bool)
 
-# default semester in settings 
+# default semester in settings
 CURRENT_SEMESTER = "20201"
+
+SITE_BASE_URL = "http://localhost:3000"
