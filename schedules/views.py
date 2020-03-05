@@ -11,6 +11,7 @@ from .tasks import generate_schedule
 from .permissions import TaskOwnerOnly, ScheduleOwnerOnly, RequestDataOwnerOnly
 from django.db import transaction
 from random import randint
+from django.http import Http404
 
 # Create your views here.
 
@@ -58,6 +59,13 @@ class TaskView(viewsets.ModelViewSet):
             return TaskSerializer
         return TaskDetailSerializer
 
+    @transaction.atomic
+    def perform_destroy(self, instance):
+        instance.schedules.all().delete()
+        request_data = instance.request_data
+        instance.delete()
+        request_data.delete()
+
 
 class ScheduleView(viewsets.ModelViewSet):
 
@@ -95,6 +103,8 @@ class RandomScheduleView(generics.RetrieveAPIView):
     def get_object(self):
         all = Schedule.objects.all().filter(public=True)
         count = all.count()
+        if count == 0:
+            raise Http404("No schedules found")
         return all[randint(0, count - 1)]
 
 

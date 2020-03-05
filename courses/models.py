@@ -2,6 +2,11 @@ from django.db import models
 from .validators import validate_termcode, validate_days_array
 from django.contrib.postgres.fields import ArrayField
 from django.core.exceptions import ValidationError
+from django.db.models.signals import pre_delete
+from django.dispatch import receiver
+from django.db.models import ProtectedError
+from django.utils.translation import gettext_lazy as _
+
 
 # Create your models here.
 
@@ -47,3 +52,10 @@ class Section(models.Model):
     def __str__(self):
         semesters = ['Spring', 'Summer', 'Fall']
         return '{course} {section_id} {section_type}'.format(course=self.course.name, section_id=self.section_id, section_type=self.section_type)
+
+
+@receiver(pre_delete)
+def protect_referenced_section(sender, instance, **kwargs):
+    if instance.schedule_set.exists():
+        raise ProtectedError(
+            _("Cannot delete a section that is referenced by schedules."), instance)
