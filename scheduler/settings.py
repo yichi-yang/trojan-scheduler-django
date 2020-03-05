@@ -169,7 +169,7 @@ CELERY_BROKER_URL = config('CELERY_BROKER_URL',
 # https://docs.djangoproject.com/en/3.0/howto/static-files/
 
 STATIC_URL = '/static/'
-STATIC_ROOT = config('STATIC_ROOT')
+STATIC_ROOT = config('STATIC_ROOT', default=None)
 
 # USC Schedule of Class scraping settings
 
@@ -182,26 +182,25 @@ LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
     'formatters': {
-        'console': {
-            # exact format is not important, this is the minimum information
-            'format': '%(asctime)s %(name)-12s %(levelname)-8s %(message)s',
-        },
+        'courses.scraper': {
+            '()': 'django.utils.log.ServerFormatter',
+            'format': '[{server_time}] {message}',
+            'style': '{',
+        }
     },
     'handlers': {
-        'console': {
+        'courses.scraper': {
+            'level': 'INFO',
             'class': 'logging.StreamHandler',
-            'formatter': 'console',
-        },
+            'formatter': 'courses.scraper',
+        }
     },
     'loggers': {
         'courses.scraper': {
-            'handlers': ['console', ],
+            'handlers': ['courses.scraper', ],
             'level': 'INFO',
+            'propagate': False,
         },
-        # 'django.db.backends': {
-        #     'level': 'DEBUG',
-        #     'handlers': ['console'],
-        # },
     },
 }
 
