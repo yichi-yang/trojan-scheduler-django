@@ -159,6 +159,11 @@ USE_L10N = True
 
 USE_TZ = True
 
+# Celery settings
+
+CELERY_BROKER_URL = config('CELERY_BROKER_URL',
+                           default='redis://localhost:6379')
+
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/3.0/howto/static-files/
@@ -227,4 +232,4 @@ SERVER_EMAIL = config('SERVER_EMAIL', default='root@localhost')
 # default semester in settings
 CURRENT_SEMESTER = "20201"
 
-SITE_BASE_URL = "http://localhost:3000"
+SITE_BASE_URL = "https://scheduler.yichiyang.com"
