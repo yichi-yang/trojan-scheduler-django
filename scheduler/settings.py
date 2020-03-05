@@ -25,10 +25,19 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SECRET_KEY = config('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = config('DEBUG', default=True, cast=bool)
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = config('ALLOWED_HOSTS', default="",
+                       cast=lambda v: [s.strip() for s in v.split(',') if s.strip()])
 
+CSRF_COOKIE_SECURE = True
+SESSION_COOKIE_SECURE = True
+SECURE_REFERRER_POLICY = "origin-when-cross-origin"
+
+ADMINS = config('ADMINS', default="",
+                cast=lambda v: [
+                    (s.split(',', 1)[0].strip(), s.split(',', 1)[1].strip())
+                    for s in v.split(';') if ',' in s])
 
 # Application definition
 
@@ -109,6 +118,8 @@ DATABASES = {
         'PORT': config('DB_PORT'),
     }
 }
+
+CONN_MAX_AGE = 60
 
 
 # Custom user model
@@ -208,6 +219,9 @@ EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD', default='')
 EMAIL_HOST_USER = config('EMAIL_HOST_USER', default='')
 EMAIL_USE_TLS = config('EMAIL_USE_TLS', default=False, cast=bool)
 EMAIL_USE_SSL = config('EMAIL_USE_SSL', default=False, cast=bool)
+DEFAULT_FROM_EMAIL = config(
+    'DEFAULT_FROM_EMAIL', default='webmaster@localhost')
+SERVER_EMAIL = config('SERVER_EMAIL', default='root@localhost')
 
 # default semester in settings
 CURRENT_SEMESTER = "20201"

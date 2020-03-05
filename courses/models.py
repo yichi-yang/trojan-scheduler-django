@@ -42,6 +42,7 @@ class Section(models.Model):
                       size=7, validators=[validate_days_array, ], blank=True)
     closed = models.BooleanField(default=False)
     order_fetched = models.PositiveSmallIntegerField()
+    removed = models.BooleanField(default=False)
 
     def validate_unique(self, exclude=None):
         if Section.objects.exclude(id=self.id).filter(section_id=self.section_id, course__term=self.course.term).exists():

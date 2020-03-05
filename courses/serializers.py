@@ -70,7 +70,7 @@ class CourseSerializer(serializers.ModelSerializer):
         section_instances = instance.sections.all()
 
         # for all existing section instances, update instances present in
-        # the validated_data and delete the other
+        # the validated_data and mark the other as removed
         for section_instance in section_instances:
             section_data = sections_dict.pop(section_instance.section_id, None)
             if section_data:
@@ -79,7 +79,8 @@ class CourseSerializer(serializers.ModelSerializer):
                 serializer.is_valid(raise_exception=True)
                 serializer.save()
             else:
-                section_instance.delete()
+                instance.removed = True
+                instance.save()
 
         # add sections that does not exist in the database
         for section_data in sections_dict.values():
