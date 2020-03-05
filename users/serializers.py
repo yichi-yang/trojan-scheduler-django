@@ -149,12 +149,15 @@ class UserSerializer(serializers.ModelSerializer):
             representation = {k: v for(k, v)in representation.items()
                               if k in allowed_fields}
 
+        if "nickname" in representation and representation["nickname"] is None:
+            representation["nickname"] = ""
+
         # return the modified representation
         return representation
 
     def to_internal_value(self, data):
-        if "nickname" in data and data["nickname"] is None:
-            data["nickname"] = ""
+        if "nickname" in data and data["nickname"] == "":
+            data["nickname"] = None
         return super().to_internal_value(data)
 
 

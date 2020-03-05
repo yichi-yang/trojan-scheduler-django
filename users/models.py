@@ -44,7 +44,7 @@ class User(AbstractUser):
                                 null=True,
                                 blank=True,
                                 unique=True,
-                                default="",
+                                default=None,
                                 validators=(UnicodeUsernameValidator, nicknameUniqueValidator))
     display_name_choice = models.CharField(max_length=2,
                                            choices=DISPLAY_NAME_CHOICES,
