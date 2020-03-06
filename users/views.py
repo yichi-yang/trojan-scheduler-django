@@ -59,7 +59,7 @@ class EmailSendTokenView(generics.GenericAPIView):
         token = EmailVerificationToken.for_user(user)
 
         context = {"username": user.username,
-                   "email_verification_url": settings.SITE_BASE_URL + "/verify/?no-update&token=" + str(token)}
+                   "email_verification_url": settings.SITE_BASE_URL + "/email/token/?no-update=true&token=" + str(token)}
 
         text = render_to_string("email_verification.txt", context)
         html = render_to_string("email_verification.html", context)
@@ -121,19 +121,22 @@ class PasswordForgetView(generics.GenericAPIView):
         html = ""
 
         if not_found:
+            url = settings.SITE_BASE_URL + "/password/forget/"
             text = render_to_string("reset_not_found_email.txt", context={
-                                    "password_forget_url": settings.SITE_BASE_URL + "/password/forget/"})
+                                    "password_forget_url": url})
             html = render_to_string("reset_not_found_email.html", context={
-                                    "password_forget_url": settings.SITE_BASE_URL + "/password/forget/"})
+                                    "password_forget_url": url})
         elif more_than_one:
             text = render_to_string("reset_multiple_account_email.txt")
             html = render_to_string("reset_multiple_account_email.html")
         else:
             token = PasswordResetToken.for_user(user)
+            url = settings.SITE_BASE_URL + \
+                "/password/token/?no-update=true&token=" + str(token)
             text = render_to_string("reset_password_email.txt", context={
-                                    "password_reset_url": settings.SITE_BASE_URL + "/password/reset/?no-update&token=" + str(token)})
+                                    "password_reset_url": url})
             html = render_to_string("reset_password_email.html", context={
-                                    "password_reset_url": settings.SITE_BASE_URL + "/password/reset/?no-update&token=" + str(token)})
+                                    "password_reset_url": url})
 
         send_mail(
             'Trojan Scheduler Password Reset',
