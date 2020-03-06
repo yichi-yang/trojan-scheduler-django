@@ -55,7 +55,7 @@ class Section(models.Model):
         return '{course} {section_id} {section_type}'.format(course=self.course.name, section_id=self.section_id, section_type=self.section_type)
 
 
-@receiver(pre_delete)
+@receiver(pre_delete, sender=Section)
 def protect_referenced_section(sender, instance, **kwargs):
     if instance.schedule_set.exists():
         raise ProtectedError(
