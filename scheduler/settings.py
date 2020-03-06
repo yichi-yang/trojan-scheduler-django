@@ -177,6 +177,9 @@ USC_SOC_SCRAPER_URL = 'https://classes.usc.edu/term-{term}/classes/{course}'
 USC_SOC_SCRAPER_TIMEOUT = 10
 USC_SOC_CACHE_REFRESH = 5 * 60
 
+# scheduler timeout
+SCHEDULER_TIME_LIMIT = 10
+
 
 LOGGING = {
     'version': 1,

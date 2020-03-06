@@ -12,6 +12,7 @@ from .permissions import TaskOwnerOnly, ScheduleOwnerOnly, RequestDataOwnerOnly
 from django.db import transaction
 from random import randint
 from django.http import Http404
+from django.conf import settings
 
 # Create your views here.
 
@@ -49,7 +50,8 @@ class TaskView(viewsets.ModelViewSet):
 
         generate_schedule.delay(request_data['coursebin'],
                                 request_data['preference'],
-                                task_instance.id)
+                                task_instance.id,
+                                settings.SCHEDULER_TIME_LIMIT)
 
         headers = self.get_success_headers(serializer.data)
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
