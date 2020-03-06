@@ -21,6 +21,7 @@ pytz==2019.3
 redis==3.3.11
 requests==2.22.0
 rope==0.14.0
+sentry-sdk==0.14.2
 some-package==0.1
 soupsieve==1.9.5
 sqlparse==0.3.0
