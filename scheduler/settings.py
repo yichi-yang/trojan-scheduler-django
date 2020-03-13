@@ -244,6 +244,6 @@ DEFAULT_FROM_EMAIL = config(
 SERVER_EMAIL = config('SERVER_EMAIL', default='root@localhost')
 
 # default semester in settings
-CURRENT_SEMESTER = "20201"
+CURRENT_SEMESTER = "20203"
 
 SITE_BASE_URL = "https://scheduler.yichiyang.com"
